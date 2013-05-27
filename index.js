@@ -126,6 +126,7 @@ fn.query = function(callback) {
     if (!values) values = newCallback;
 
     if (!this.table) callback(log.error("Model doesn't exist! (No table provided)"));
+    else if (this.table == ':test:') callback(null, query);
     else engine.query(query, values, newCallback);
 
     this._rebuild();
@@ -212,7 +213,7 @@ fn.find = function(id, callback) {
     // USAGE: #find(id int | [ids])
 
     if (Array.isArray(id)) id = id.join(",");
-    return this.where(this.idField + ' IN (%1)',[id],callback);
+    return this.where(this.idField + ' IN ('+id+')',callback);
 };
 
 fn.order = function(orderBy, callback) {

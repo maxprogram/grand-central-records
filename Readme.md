@@ -2,6 +2,7 @@
 
 ### TODO
 
+* Finish tests
 * Create object for Model.new() & .save()
 * MySQL Pool Connections
 * GCE Error Handling
