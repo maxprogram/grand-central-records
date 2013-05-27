@@ -30,5 +30,5 @@
         "underscore": "*",
         "underscore.string": "*",
         "step": "~0.0.5"
-    },
+    }
 }

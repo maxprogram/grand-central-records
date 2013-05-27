@@ -3,52 +3,75 @@
 var _    = require('underscore'),
     _str = require('underscore.string'),
     path = require('path'),
-    log = require('../log');
+    log = require('./log');
 
 
 ///////////////////////////////////////
 
 
-var ORM = function(connection, model){
+var ORM = function(connection, table, options){
+    if (!connection || !connection.adapter)
+        return log.error("No connection adapter provided");
+    if (typeof table === "object") {
+        options = table;
+        table = null;
+    } else if (!options) options = {};
+
     var adapter = connection.adapter,
-        table = model.name.toLowerCase().replace(/\s/g,''),
-        verbose = (model.hasOwnProperty("verbose")) ? model.verbose : false;
+        verbose = options.hasOwnProperty("verbose") ? options.verbose : false;
 
     // Load database adapters
-    if (_.contains(['postgres','pg','postgresql'], adapter)) {
-        this.adapter = "pg";
-        var Postgres = require('./adapters/pg');
-        this.engine = new Postgres(connection);
 
-    } else if (_.contains(['mysql','mySQL','MySQL'], adapter)) {
-        this.adapter = "mysql";
-        var Mysql = require('./adapters/mysql');
-        this.engine = new Mysql(connection);
+    if (connection.engine) this.engine = connection.engine;
+    else {
+        if (_.contains(['postgres','pg','postgresql'], adapter)) {
+            this.adapter = "pg";
+            var Postgres = require('./adapters/pg');
+            this.engine = new Postgres(connection);
 
-    } else if (_.contains(['sqlite','sqlite3'], adapter)) {
-        this.adapter = "sqlite";
-        if (connection.database != ':memory:')
-            connection.database = path.join(connection.dir, connection.database);
-        var Sqlite = require('./adapters/sqlite');
-        this.engine = new Sqlite(connection);
+        } else if (_.contains(['mysql','mySQL','MySQL'], adapter)) {
+            this.adapter = "mysql";
+            var Mysql = require('./adapters/mysql');
+            this.engine = new Mysql(connection);
 
-    } else {
-        return log.error("Database adapter '"+adapter+"' missing or not recognized: "+JSON.stringify(connection));
+        } else if (_.contains(['sqlite','sqlite3'], adapter)) {
+            this.adapter = "sqlite";
+            if (connection.database != ':memory:')
+                connection.database = path.join(connection.dir, connection.database);
+            var Sqlite = require('./adapters/sqlite');
+            this.engine = new Sqlite(connection);
+
+        } else if (adapter == 'test') {
+            this.adapter = "test";
+            this.engine = function(){};
+
+        } else {
+            return log.error("Database adapter '"+adapter+"' not recognized");
+        }
     }
 
+    this._options = options;
     this.verbose = verbose;
-    this.name = model.name;
     this.table = table;
-    this.idField = model.idAttribute || (this.adapter=="pg") ? "gid" : "id";
+    this.idField = options.idAttribute || this.adapter == "pg" ? "gid" : "id";
     this.values = null;
 
     this._rebuild();
-    connection = model = null;
+    connection = options = null;
 };
 
 var fn = ORM.prototype;
 
 module.exports = ORM;
+
+///////////////////////////////////////
+
+fn.model = function(table) {
+    return new ORM({
+        adapter: this.adapter,
+        engine: this.engine
+    }, table, this._options);
+};
 
 ///////////////////////////////////////
 
@@ -102,7 +125,9 @@ fn.query = function(callback) {
     var values = this.values;
     if (!values) values = newCallback;
 
-    engine.query(query, values, newCallback);
+    if (!this.table) callback(log.error("Model doesn't exist! (No table provided)"));
+    else engine.query(query, values, newCallback);
+
     this._rebuild();
 };
 

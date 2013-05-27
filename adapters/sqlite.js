@@ -1,6 +1,6 @@
 var sqlite3 = require('sqlite3'),
     Step = require('step'),
-    log = require('../../log').database,
+    log = require('../log').database,
     _ = require('underscore'),
     _str = require('underscore.string');
 

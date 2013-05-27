@@ -63,6 +63,22 @@ Model.select(["name","address"]).where({admin: true}, function(err, result) {
 });
 ```
 
+Multiple models can also be created from the same database.
+```js
+var GCR = require('grand-central-records');
+
+var db = new GCR({
+    adapter: "mysql",
+    host: "localhost",
+    database: "test",
+    username: "admin",
+    password: "admin"
+}, { verbose: true });
+
+var User = db.model("users"),
+    Project = db.model("projects");
+```
+
 ## Query Methods:
 
 ### .all()
