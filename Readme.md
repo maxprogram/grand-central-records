@@ -1,5 +1,7 @@
 # Grand Central Records
 
+A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks. Work in progress.
+
 ### TODO
 
 * Finish tests
