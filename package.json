@@ -2,8 +2,7 @@
     "name": "grand-central-records",
     "description": "An activerecord-inspired ORM for Node.js",
     "version": "0.0.3",
-    "preferGlobal": true,
-    "keywords": ["grand central", "router", "rails", "backbone", "orm", "activerecord"],
+    "keywords": ["grand central", "rails", "orm", "activerecord"],
     "author": {
         "name": "Max Olson",
         "url": "http://www.github.com/maxprogram/grand-central-records"

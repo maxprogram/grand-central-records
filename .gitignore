@@ -17,9 +17,9 @@ ehthumbs.db
 Thumbs.db
 .project
 
-.sqlite
-.sqlite3
-.db
+*.sqlite
+*.sqlite3
+*.db
 
 /node_modules
 sandbox.js

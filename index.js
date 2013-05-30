@@ -112,10 +112,6 @@ fn.query = function(callback) {
     var newCallback = function(err,res,fields){
         if (err) log.error(err, false);
         else {
-            if (Array.isArray(res)) {
-                res = (res.length > 1) ? res : res[0];
-            }
-
             // TODO: return model object(s) with data, methods
             var object = res;
             callback(null, object);
