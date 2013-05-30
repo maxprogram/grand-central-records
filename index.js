@@ -22,8 +22,10 @@ var ORM = function(connection, table, options){
 
     // Load database adapters
 
-    if (connection.engine) this.engine = connection.engine;
-    else {
+    if (connection.engine){
+        this.adapter = adapter;
+        this.engine = connection.engine;
+    } else {
         if (_.contains(['postgres','pg','postgresql'], adapter)) {
             this.adapter = "pg";
             var Postgres = require('./adapters/pg');
@@ -67,10 +69,11 @@ module.exports = ORM;
 ///////////////////////////////////////
 
 fn.model = function(table) {
+    var _this = this;
     return new ORM({
-        adapter: this.adapter,
-        engine: this.engine
-    }, table, this._options);
+        adapter: _this.adapter,
+        engine: _this.engine
+    }, table, _this._options);
 };
 
 ///////////////////////////////////////

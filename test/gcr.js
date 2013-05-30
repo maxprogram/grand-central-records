@@ -44,6 +44,8 @@ describe('models', function() {
 
         assert.equal(Item.table, "items");
         assert.equal(Person.table, "people");
+        assert.equal(Person.adapter, "test");
+        assert.ok(Person.engine);
     });
 
     it('should fail without table', function(done) {
