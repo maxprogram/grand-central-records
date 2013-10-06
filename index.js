@@ -20,6 +20,8 @@ var ORM = function(connection, table, options){
     var adapter = connection.adapter,
         verbose = options.hasOwnProperty("verbose") ? options.verbose : false;
 
+    if (typeof options.logger === 'function') log.logger = options.logger;
+
     // Load database adapters
 
     if (connection.engine){
@@ -64,6 +66,8 @@ var ORM = function(connection, table, options){
 
 var fn = ORM.prototype;
 
+require('./lib/query')(fn);
+
 module.exports = ORM;
 
 ///////////////////////////////////////
@@ -105,12 +109,9 @@ fn._buildQuery = function() {
            other);
 };
 
-fn.query = function(callback) {
-    var _this = this,
-        engine = this.engine,
-        query = (this.verbose) ?
-            {sql: this._buildQuery(), verbose: true} :
-            this._buildQuery();
+fn._query = function(callback) {
+    var query = this._buildQuery(),
+        values = this.values;
 
     var newCallback = function(err,res,fields){
         if (err) log.error(err, false);
@@ -121,18 +122,15 @@ fn.query = function(callback) {
         }
     };
 
-    var values = this.values;
-    if (!values) values = newCallback;
-
-    if (!this.table) callback(log.error("Model doesn't exist! (No table provided)"));
-    else if (this.table == ':test:') callback(null, query);
-    else engine.query(query, values, newCallback);
+    if (!this.table) {
+        callback(log.error("Model doesn't exist! (No table provided)"));
+    } else if (this.table == ':test:') {
+        callback(null, query);
+    } else {
+        this.query(query, values, newCallback);
+    }
 
     this._rebuild();
-};
-
-fn.run = function(callback) {
-    this.query(callback);
 };
 
 ///////////////////////////////////////
@@ -168,7 +166,7 @@ fn.select = function(columns, callback) {
 
     this.q.action = "SELECT " + columns;
 
-    if (callback) this.query(callback);
+    if (callback) this._query(callback);
     else return this;
 
 };
@@ -197,19 +195,21 @@ fn.where = function(conditions,values,callback) {
     } else callback = values;
 
     this.q.where = "WHERE " + conditions;
-    if (callback) this.query(callback);
+    if (callback) this._query(callback);
     else return this;
 
 };
 
 fn.all = function(callback) {
-    if (callback) this.query(callback);
+    if (callback) this._query(callback);
     else return this;
 };
 
 fn.find = function(id, callback) {
 
     // USAGE: #find(id int | [ids])
+
+    if (!id) return new Error('#find() needs a valid ID');
 
     if (Array.isArray(id)) id = id.join(",");
     return this.where(this.idField + ' IN ('+id+')',callback);
@@ -220,7 +220,7 @@ fn.order = function(orderBy, callback) {
     // USAGE: #order(column DESC|ASC string)
 
     this.q.others.orderBy = " ORDER BY " + orderBy;
-    if (callback) this.query(callback);
+    if (callback) this._query(callback);
     else return this;
 };
 
@@ -229,7 +229,7 @@ fn.limit = function(num, callback){
     // USAGE: #limit(int)
 
     this.q.others.limit = " LIMIT " + num;
-    if (callback) this.query(callback);
+    if (callback) this._query(callback);
     else return this;
 };
 
@@ -240,7 +240,7 @@ fn.offset = function(num, callback) {
     this.q.others.offset += " OFFSET " + num;
     if (this.q.others.limit === "") this.q.others.limit = "9223372036854775807";
 
-    if (callback) this.query(callback);
+    if (callback) this._query(callback);
     else return this;
 };
 
@@ -279,7 +279,7 @@ fn.insert = function(data, callback) {
         this.q.action = "INSERT INTO "+this.table+" ("+data.keyStr+") VALUES("+data.dataStr+")";
     }
 
-    if (callback) this.query(callback);
+    if (callback) this._query(callback);
     else return this;
 };
 
@@ -315,7 +315,7 @@ fn.update = function(id, data, callback) {
     }
 
     if (where) this.q.where += "WHERE "+this.idField+" = "+id;
-    if (callback) this.query(callback);
+    if (callback) this._query(callback);
     else return this;
 };
 
@@ -332,7 +332,7 @@ fn.remove = function(id, callback) {
     if (where) this.q.where += "WHERE "+this.idField+" = "+id;
     else if (this.q.where==="") return log.error(".where() must be called before .remove()");
 
-    if (callback) this.query(callback);
+    if (callback) this._query(callback);
     else return this;
 };
 

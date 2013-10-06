@@ -8,8 +8,8 @@ var _options;
 
 function Postgres(connect){
     _options = {
-        host: connect.host,
-        user: connect.username,
+        host: connect.host || 'localhost',
+        user: connect.username || 'postgres',
         password: connect.password,
         database: connect.database
     };
@@ -25,9 +25,9 @@ fn.query = function (sql,values,cb){
     var client, self = this, verbose = false;
 
     var logging = function(){};
-    if (sql.verbose){
+    if (typeof sql === 'object'){
         sql = sql.sql;
-        verbose = true;
+        verbose = sql.verbose;
         logging = function(str, type, time){
             return log(str, type, time);
         };
@@ -58,13 +58,9 @@ fn.query = function (sql,values,cb){
         // query([sql, sql], cb)
             var group = this.group();
             cb = values;
-            for (var i=1; i < sql.length; i++)
-                sql[0] = sql[0].replace(new RegExp("%"+i,"g"),sql[i]);
-            sql = sql[0].split(";");
-
             logging("Executing series...");
-            for (var n in sql){
-                if (sql[n] !== "") client.query(sql[n], group());
+            for (var i=0; i < sql.length; i++){
+                if (sql[i] !== "") client.query(sql[i], group());
             }
         }
         // query(sql, values, cb)
@@ -97,25 +93,6 @@ fn.query = function (sql,values,cb){
         cb(err, results);
     });
 
-};
-
-fn.queue = function(str,values){
-    if (values) values.forEach(function(v,i){
-        i++;
-        str = str.replace(new RegExp("%"+i,"g"),v);
-    });
-    this.q += str + ";";
-    return this;
-};
-
-fn.execute = function(callback){
-    this.query([this.q],callback);
-    this.q = "";
-};
-
-fn.run = function(callback){
-    this.query([this.q],callback);
-    this.q = "";
 };
 
 fn.escape = function(d){
