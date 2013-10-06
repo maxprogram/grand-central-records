@@ -9,32 +9,44 @@ var bold  = '\033[1m',
     yell  = '\033[33m',
     reset = '\033[0m';
 
-exports.log = function(str) {
-    var msg = bold + blue + '[GCR] ' + reset;
-    msg += str;
+var fn = exports;
 
-    console.log(msg);
+fn.logger = console.log;
+
+fn.log = function(str) {
+    var msg;
+
+    if (fn.logger == console.log) {
+        msg = bold + blue + '[GCR] ' + reset + str;
+        fn.logger(msg);
+    } else {
+        fn.logger(str);
+    }
+
     return str;
 };
 
-exports.error = function(str, kill) {
+fn.error = function(str, kill) {
     if (kill === null) kill = false;
-    var msg = bold + red + 'ERROR' + reset;
-    msg += ' ' + str;
+    var msg;
 
-    exports.log(msg);
+    if (fn.logger == console.log)
+        msg = bold + red + 'ERROR' + reset + ' ' + str;
+    else msg = 'ERROR: ' + str;
+
+    fn.log(msg);
     if (kill) process.exit(1);
     return new Error(str);
 };
 
-exports.warn = function(str) {
+fn.warn = function(str) {
     var msg = bold + yell + 'WARNING' + reset;
     msg += ' ' + str;
 
-    return exports.log(msg);
+    return fn.log(msg);
 };
 
-exports.database = function(str, type, time) {
+fn.database = function(str, type, time) {
 
     type = type || '';
 
@@ -45,6 +57,10 @@ exports.database = function(str, type, time) {
     }
 
     var task = (type==='') ? '' : type + " (" + time + "ms)";
-    console.log(bold + cyan + cols(task) + reset + str);
 
+    if (fn.logger == console.log) {
+        fn.logger(bold + cyan + cols(task) + reset + str);
+    } else {
+        fn.logger(cols(task) + str);
+    }
 };

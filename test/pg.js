@@ -3,7 +3,76 @@ var GCR = require('..');
 
 describe('postgres', function() {
 
-var Model;
+var Model, pg, q;
+
+before(function() {
+    // Must have database 'gcr_test' on localhost
+    // with owner 'postgres'
+    //
+    // psql -h localhost
+    // CREATE USER postgres SUPERUSER;
+    // CREATE DATABASE gcr_test WITH OWNER postgres;
+
+    pg = new GCR({
+        adapter: "postgres",
+        database: "gcr_test"
+    });
+});
+
+after(function(done) {
+    pg.query('DROP TABLE IF EXISTS test', function(err){
+        if (err) throw err;
+        done();
+    });
+});
+
+describe('query', function() {
+    it('should query PG engine', function(done) {
+        q = 'CREATE TABLE IF NOT EXISTS test ' +
+            '(gid serial NOT NULL, name text, age integer);' +
+            "DELETE FROM test;" +
+            "INSERT INTO test (name, age) VALUES('max', 27);";
+        pg.query(q, function(err, res) {
+            assert.ifError(err);
+            assert(!res.length);
+            done();
+        });
+    });
+
+    it('should return correct results', function(done) {
+        q = 'SELECT * FROM test';
+        pg.query(q, function(err, res) {
+            assert.ifError(err);
+            assert.equal(res[0].name, 'max');
+            done();
+        });
+    });
+
+    it('should execute queue queries', function(done) {
+        pg.verbose = true;
+        pg.queue("DELETE FROM test")
+          .queue("INSERT INTO test (name) VALUES(%1)", ['jack'])
+          .queue("INSERT INTO test (name,age) VALUES(:name,6)", {name: 'sam'})
+          .queue("SELECT * FROM test")
+          .run(function(err, res) {
+            assert.ifError(err);
+            assert.equal(res.length, 2);
+            assert.equal(res[0].name, 'jack');
+            assert.equal(res[1].name, 'sam');
+            done();
+          });
+    });
+
+    it('should return multiple results', function(done) {
+        pg.queue("SELECT name FROM test")
+          .queue("SELECT age FROM test WHERE name = 'sam'")
+          .run(function(err, res) {
+            assert.equal(res[0].name, 'jack');
+            assert.equal(res[2].age, 6);
+            done();
+          });
+    });
+});
 
 describe('connection', function() {
     it('should connect', function() {
