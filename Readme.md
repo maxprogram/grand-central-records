@@ -88,38 +88,46 @@ var User = db.model("users"),
 
 Execute raw query to database.
 ```js
-db.query('SELECT 1', function(err, res) {
-    console.log(res[0]); // 1
+db.query('SELECT 1 AS a', function(err, res) {
+    console.log(res[0].a); // 1
 });
 
 // Substitute with array of values
-db.query('SELECT 1; SELECT %2;', ['hello'], function(err, res) {
-    console.log(res[0]); // 1
-    console.log(res[1]); // hello
+db.query('SELECT 1 AS a; SELECT %2 AS a;', ['hello'], function(err, res) {
+    console.log(res[0].a); // 1
+    console.log(res[1].a); // hello
 });
 
 // Substitute with key/values
-db.query('SELECT :name', { name: 'hello' }, function(err, res) {
-    console.log(res[0]); // hello
+db.query('SELECT :name AS a', { name: 'hello' }, function(err, res) {
+    console.log(res[0].a); // hello
 })
 ```
 
 ### .queue(query, [values])
 
-Add query to queue for layer execution.
+Add query to queue for layer execution. Query can be a raw query string, a chained method object, or an array of either. Values can't be passed to objects or arrays (only raw strings);
 ```js
-db.queue('SELECT 1')
+db.queue('SELECT 1 AS a')
   .queue('SELECT %1', [2])
-  .queue('SELECT :name', { name: 'hello' })
+  .queue('SELECT :name AS a', { name: 'hello' })
   .run(function(err, res) {
-    console.log(res[0]); // 1
-    console.log(res[2]); // hello
+    console.log(res[0].a); // 1
+    console.log(res[2].a); // hello
 });
 
-db.queue('SELECT 1');
+db.queue(Model.find(1))
+  .queue(Model.select('name').limit(1))
+  .run(function(err, res) {
+    console.log(res[0]); // (row with ID of 1)
+    console.log(res[1]); // (first row with only name column)
+});
+
+db.queue(['SELECT 1 AS a', 'SELECT 2 AS a']);
 . . .
 db.run(function(err, res) {
-    console.log(res[0]); // 1
+    console.log(res[0].a); // 1
+    console.log(res[1].a); // 2
 });
 ```
 
