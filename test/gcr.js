@@ -31,31 +31,4 @@ describe('init', function() {
     });
 });
 
-describe('models', function() {
-    it('should accept model in connection', function() {
-        var Item = new GCR({ adapter: "test" }, "items");
-        assert.equal(Item.table, "items");
-    });
-
-    it('should accept mutiple models', function() {
-        var db = new GCR({ adapter: "test" }),
-            Item = db.model("items"),
-            Person = db.model("people");
-
-        assert.equal(Item.table, "items");
-        assert.equal(Person.table, "people");
-        assert.equal(Person.adapter, "test");
-        assert.ok(Person.engine);
-    });
-
-    it('should fail without table', function(done) {
-        var Item = new GCR({ adapter: "test" });
-        Item.all(function(err, res) {
-            assert.throws(err);
-            done();
-        });
-    });
-});
-
-
 });
