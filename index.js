@@ -3,7 +3,8 @@
 var _    = require('underscore'),
     _str = require('underscore.string'),
     path = require('path'),
-    log = require('./log');
+    log = require('./log'),
+    model = require('./lib/model');
 
 
 ///////////////////////////////////////
@@ -55,8 +56,10 @@ var ORM = function(connection, table, options){
     }
 
     this._options = options;
+    this._modelOps = options.modelOptions;
     this.verbose = verbose;
     this.table = table;
+
     this.idField = options.idAttribute || this.adapter == "pg" ? "gid" : "id";
     this.values = null;
 
@@ -72,12 +75,17 @@ module.exports = ORM;
 
 ///////////////////////////////////////
 
-fn.model = function(table) {
-    var _this = this;
+fn.model = function(table, options) {
+    var _this = this,
+        opts = _.clone(this._options);
+
+    if (options) options._table = table;
+    opts.modelOptions = options;
+
     return new ORM({
         adapter: _this.adapter,
         engine: _this.engine
-    }, table, _this._options);
+    }, table, opts);
 };
 
 ///////////////////////////////////////
@@ -110,22 +118,28 @@ fn._buildQuery = function() {
 };
 
 fn._query = function(callback) {
-    var query = this._buildQuery(),
+    var modelOps = this._modelOps,
+        query = this._buildQuery(),
         values = this.values;
 
     var newCallback = function(err,res,fields){
         if (err) log.error(err, false);
         else {
             // TODO: return model object(s) with data, methods
-            var object = res;
-            callback(null, object);
+            if (modelOps && modelOps.map) {
+                var data = Array.isArray(res) ? res : modelOps.data || [];
+                modelOps._query = query;
+                callback(null, model.map(data, modelOps));
+            } else {
+                callback(null, res);
+            }
         }
     };
 
     if (!this.table) {
         callback(log.error("Model doesn't exist! (No table provided)"));
     } else if (this.table == ':test:') {
-        callback(null, query);
+        newCallback(null, query);
     } else {
         this.query(query, values, newCallback);
     }
@@ -135,18 +149,8 @@ fn._query = function(callback) {
 
 ///////////////////////////////////////
 
-function Model(orm, data) {
-    this._orm = orm;
-
-}
-
-Model.prototype.save = function(callback) {
-    this._orm.create({}, callback);
-    return this;
-};
-
 fn.new = function(data) {
-    return new Model(this, data);
+    return new model.Model(data, this._modelOps);
 };
 
 ///////////////////////////////////////
@@ -322,7 +326,7 @@ fn.update = function(id, data, callback) {
 fn.remove = function(id, callback) {
 
     // USAGE: #remove(id int)
-    // USAGE: #remove().where()
+    // USAGE: #where().remove()
 
     var where = false;
 

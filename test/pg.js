@@ -17,6 +17,7 @@ before(function() {
         adapter: "postgres",
         database: "gcr_test"
     });
+    Model = pg.model('test');
 });
 
 after(function(done) {
@@ -69,6 +70,25 @@ describe('query', function() {
           .run(function(err, res) {
             assert.equal(res[0].name, 'jack');
             assert.equal(res[2].age, 6);
+            done();
+          });
+    });
+
+    it('should queue array', function(done) {
+        pg.queue(["SELECT 1 as a", "SELECT 2 as a"])
+          .run(function(err, res) {
+            assert.equal(res[0].a, 1);
+            assert.equal(res[1].a, 2);
+            done();
+          });
+    });
+
+    it('should queue chain object', function(done) {
+        pg.queue(Model.where({name: 'jack'}))
+          .queue(Model.select('age').where({name: 'sam'}))
+          .run(function(err, res) {
+            assert.equal(res[0].name, 'jack');
+            assert.equal(res[1].age, 6);
             done();
           });
     });
