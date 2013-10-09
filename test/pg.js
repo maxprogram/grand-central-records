@@ -98,7 +98,7 @@ describe('connection', function() {
     it('should connect', function() {
         Model = new GCR({
             adapter: "postgres"
-        }, ":test:");
+        }, ":test:", {idAttribute: 'gid'});
         assert(Model.engine);
     });
 });
