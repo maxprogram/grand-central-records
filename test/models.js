@@ -33,7 +33,7 @@ describe('', function() {
 });
 
 var dummyData = [
-    {first: "Clark", last: "Kent", age: 37},
+    {first: "Clark", last: "Kent", age: 37, type: "Alien"},
     {first: "Bruce", last: "Wayne", age: 42}
 ];
 
@@ -41,12 +41,20 @@ describe('with map', function() {
     it('should map data to model', function() {
         Model = db.model(':test:', {
             map: true,
-            data: dummyData
+            data: dummyData,
+            schema: {
+                first: String,
+                last: String,
+                age: Number,
+                type: {type: String, default: 'Person'}
+            }
         });
         Model.all(function(err, models) {
             assert.ifError(err);
             assert.equal(models[0]._query, 'SELECT * FROM :test:');
             assert.equal(models[1].age, 42);
+            assert.equal(models[0].type, 'Alien');
+            assert.equal(models[1].type, 'Person');
         });
     });
 

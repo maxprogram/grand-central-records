@@ -70,6 +70,7 @@ var ORM = function(connection, table, options){
 var fn = ORM.prototype;
 
 require('./lib/query')(fn);
+model.setModelFunctions(fn);
 
 module.exports = ORM;
 
@@ -216,6 +217,9 @@ fn.find = function(id, callback) {
     if (!id) return new Error('#find() needs a valid ID');
 
     if (Array.isArray(id)) id = id.join(",");
+    else if (isNaN(parseFloat(id)))
+        return new Error('#find() should be an array or number');
+
     return this.where(this.idField + ' IN ('+id+')',callback);
 };
 
