@@ -106,7 +106,7 @@ db.query('SELECT :name AS a', { name: 'hello' }, function(err, res) {
 
 ### .queue(query, [values])
 
-Add query to queue for layer execution. Query can be a raw query string, a chained method object, or an array of either. Values can't be passed to objects or arrays (only raw strings);
+Add query to queue for later execution. Query can be a raw query string, a chained method object, or an array of either. Values can't be passed to objects or arrays (only raw strings);
 ```js
 db.queue('SELECT 1 AS a')
   .queue('SELECT %1', [2])
@@ -136,6 +136,21 @@ db.run(function(err, res) {
 To map query results to a model, pass `map: true` to model options, like this:
 ```js
 var User = db.model('users', { map: true });
+```
+
+Define a schema for default values and validations [* validations not implemented yet].
+
+```js
+var User = db.model('users', {
+    map: true,
+    schema: {
+        first: String,
+        last:  String,
+        admin: { type: Boolean, default: false },
+        created_at: Date,
+        updated_at: Date
+    }
+});
 ```
 
 ### Expansion of models
