@@ -60,7 +60,7 @@ var ORM = function(connection, table, options){
     this.verbose = verbose;
     this.table = table;
 
-    this.idField = options.idAttribute || this.adapter == "pg" ? "gid" : "id";
+    this.idField = options.idAttribute || "id";
     this.values = null;
 
     this._rebuild();
@@ -80,7 +80,10 @@ fn.model = function(table, options) {
     var _this = this,
         opts = _.clone(this._options);
 
-    if (options) options._table = table;
+    if (options) {
+        options._table = table;
+        options._idField = this.idField;
+    }
     opts.modelOptions = options;
 
     return new ORM({
