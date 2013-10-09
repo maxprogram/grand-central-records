@@ -51,6 +51,7 @@ describe('with map', function() {
         });
         Model.all(function(err, models) {
             assert.ifError(err);
+            assert.equal(models[0].id, -1);
             assert.equal(models[0]._query, 'SELECT * FROM :test:');
             assert.equal(models[1].age, 42);
             assert.equal(models[0].type, 'Alien');
