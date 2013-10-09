@@ -255,6 +255,16 @@ fn.offset = function(num, callback) {
     else return this;
 };
 
+fn.returning = function(field, callback) {
+    if (this.adapter == "pg") {
+        this.q.others.returning = " RETURNING " + field;
+    } else {
+        new Error('#returning() only available for Postgres');
+    }
+    if (callback) this._query(callback);
+    return this;
+};
+
 fn._cleanData = function(data) {
     var keys = Object.keys(data),
         engine = this.engine,
