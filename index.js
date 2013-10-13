@@ -348,10 +348,12 @@ fn.remove = function(id, callback) {
     var where = false;
 
     if (typeof id !== "function") where = true;
+    else callback = id;
 
     this.q.action = "DELETE";
     if (where) this.q.where += "WHERE "+this.idField+" = "+id;
-    else if (this.q.where==="") return log.error(".where() must be called before .remove()");
+    else if (this.q.where === "")
+        return log.error(".where() must be called before .remove()");
 
     if (callback) this._query(callback);
     else return this;
