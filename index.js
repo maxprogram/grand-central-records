@@ -92,6 +92,11 @@ fn.model = function(table, options) {
     }, table, opts);
 };
 
+fn.table = function(table) {
+    this.table = table;
+    return this;
+};
+
 ///////////////////////////////////////
 
 fn._rebuild = function() {

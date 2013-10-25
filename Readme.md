@@ -93,7 +93,7 @@ db.query('SELECT 1 AS a', function(err, res) {
 });
 
 // Substitute with array of values
-db.query('SELECT 1 AS a; SELECT %2 AS a;', ['hello'], function(err, res) {
+db.query('SELECT 1 AS a; SELECT %1 AS a;', ['hello'], function(err, res) {
     console.log(res[0].a); // 1
     console.log(res[1].a); // hello
 });
