@@ -133,13 +133,15 @@ fn.escape = function(d){
               default: return "\\"+s;
             }
           });
-        return "'"+d+"'";
+        if (d === '') return 'NULL';
+        else return "'"+d+"'";
     }
 
     if (Array.isArray(d)) return "'{"+d.join(",")+"}'";
 
     if (typeof d === "object") {
         var command = Object.keys(d)[0], val = d[command];
+        if (command == 'noEscape') return val;
     }
 
 };

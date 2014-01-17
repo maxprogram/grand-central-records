@@ -134,7 +134,6 @@ fn._query = function(callback) {
     var newCallback = function(err,res,fields){
         if (err) log.error(err, false);
         else {
-            // TODO: return model object(s) with data, methods
             if (modelOps && modelOps.map) {
                 var data = Array.isArray(res) ? res : modelOps.data || [];
                 modelOps._query = query;
@@ -222,7 +221,8 @@ fn.find = function(id, callback) {
 
     // USAGE: #find(id int | [ids])
 
-    if (!id) return new Error('#find() needs a valid ID');
+    if (id === null || id === undefined)
+        return new Error('#find() needs a valid ID');
 
     if (Array.isArray(id)) id = id.join(",");
     else if (isNaN(parseFloat(id)))
