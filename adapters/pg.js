@@ -26,8 +26,8 @@ fn.query = function (sql,values,cb){
 
     var logging = function(){};
     if (typeof sql === 'object'){
-        sql = sql.sql;
         verbose = sql.verbose;
+        sql = sql.sql;
         logging = function(str, type, time){
             return log(str, type, time);
         };
