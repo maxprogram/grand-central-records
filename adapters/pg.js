@@ -96,6 +96,8 @@ fn.query = function (sql,values,cb){
 };
 
 fn.escape = function(d){
+    var _this = this;
+
     if (d === undefined || d === null) return "NULL";
 
     if (typeof d === "boolean") return (d) ? 'true' : 'false';
@@ -132,16 +134,30 @@ fn.escape = function(d){
               case "\x1a": return "\\Z";
               default: return "\\"+s;
             }
-          });
+        });
         if (d === '') return 'NULL';
         else return "'"+d+"'";
     }
 
-    if (Array.isArray(d)) return "'{"+d.join(",")+"}'";
+    // 2 nested arrays nullifies escape
+    if (Array.isArray(d[0])) return d[0][0];
+
+    if (Array.isArray(d)) {
+        return "'{" + d.map(function(a) {
+            return _this.escape(a).replace(/'/g,'"');
+        }).join(",") + "}'";
+    }
 
     if (typeof d === "object") {
-        var command = Object.keys(d)[0], val = d[command];
-        if (command == 'noEscape') return val;
+        var keys = Object.keys(d),
+            hstore = [], value;
+        if (keys[0] == 'noEscape') return d[keys[0]];
+        keys.forEach(function(key) {
+            value = _this.escape(d[key]);
+            value = value.replace(/'/g, "\"");
+            hstore.push(key + ' => ' + value);
+        });
+        return "'"+hstore.join(", ")+"'";
     }
 
 };
