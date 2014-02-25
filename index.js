@@ -78,11 +78,11 @@ module.exports = ORM;
 
 fn.model = function(table, options) {
     var _this = this,
-        opts = _.clone(this._options);
+        opts = _.extend(_.clone(this._options), options);
 
     if (options) {
         options._table = table;
-        options._idField = this.idField;
+        options._idField = opts.idAttribute || this.idField;
     }
     opts.modelOptions = options;
 

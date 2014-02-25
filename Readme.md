@@ -86,7 +86,8 @@ __Arguments__
 * __table__ `string` — An optional table name if only a single table is being queried.
 * __options__ `json` — Options to pass to the model.
 	* *verbose* `boolean` —  Turning verbose on will log all queries on the console. `false` by default.
-	* *map* `boolean` — Set to `true` to map query results to a model. Otherwise, results will be in their raw format.
+	* *idAttribute* `string` — The name of the unique ID attribute field (defaults to 'id');
+    * *map* `boolean` — Set to `true` to map query results to a model. Otherwise, results will be in their raw format.
 	* (see [Models](#models))
 
 Creating a new instance of the GCR object creates a connection to a new database.
@@ -306,8 +307,10 @@ Animal.find([6, 18], function(err, animals) {
 <a name="insert"/>
 ### insert(data, [callback]), create()
 
-* __data__ `object` `array` — An object of the data, with correctly named columns, to be inserted into the table. With Postgres it also can be an array of objects.
+* __data__ `object` `array` — An object of the data, with correctly named columns, to be inserted into the table. With Postgres & SQLite it also can be an array of objects.
 * __callback(err, rows)__ — Optional callback to run the query.
+
+For Postgres, #insert() also returns the ID attribute.
 
 <a name="update"/>
 ### update(id, data, [callback])
