@@ -310,7 +310,7 @@ fn.insert = function(data, callback) {
                 for (var f in fields) {
                     field = fields[f];
                     value = data[i][fields[f]];
-                    if (value) row.push(engine.escape(value));
+                    if (value !== undefined) row.push(engine.escape(value));
                     else row.push('NULL');
                 }
                 values.push("(" + row.join() + ")");
