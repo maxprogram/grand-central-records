@@ -113,7 +113,7 @@ fn._rebuild = function() {
     };
 };
 
-fn._buildQuery = function() {
+fn.toString = function() {
     var other = "" +
         this.q.others.orderBy +
         this.q.others.limit +
@@ -128,7 +128,7 @@ fn._buildQuery = function() {
 
 fn._query = function(callback) {
     var modelOps = this._modelOps,
-        query = this._buildQuery(),
+        query = this.toString(),
         values = this.values;
 
     var newCallback = function(err,res,fields){
