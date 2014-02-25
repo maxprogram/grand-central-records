@@ -262,6 +262,9 @@ fn.offset = function(num, callback) {
 
 fn.returning = function(field, callback) {
     if (this.adapter == "pg") {
+        if (Array.isArray(field)) {
+            field = field.join(', ');
+        }
         this.q.others.returning = " RETURNING " + field;
     } else {
         new Error('#returning() only available for Postgres');
@@ -287,22 +290,41 @@ fn._cleanData = function(data) {
 };
 
 fn.insert = function(data, callback) {
+    var engine = this.engine,
+        fields = [], values = [], row = [],
+        field, value;
 
     // USAGE: #insert({column: value, ..})
 
     this.q.from = "";
-    if (this.adapter == "pg") {
-        data = this._cleanData(data);
-        this.q.action = "INSERT INTO "+this.table+" ("+data.keyStr+") VALUES("+data.dataStr+")";
+    this.q.action = "INSERT INTO " + this.table;
+
+    if (this.adapter == "pg" || this.adapter == "sqlite") {
+        if (Array.isArray(data)) {
+            data.forEach(function(row) {
+                fields = fields.concat(Object.keys(row));
+            });
+            fields = _.uniq(fields);
+            for (var i in data) {
+                row = [];
+                for (var f in fields) {
+                    field = fields[f];
+                    value = data[i][fields[f]];
+                    if (value) row.push(engine.escape(value));
+                    else row.push('NULL');
+                }
+                values.push("(" + row.join() + ")");
+            }
+            this.q.action += " (" + fields.join() + ") VALUES " + values.join(', ');
+        } else {
+            data = this._cleanData(data);
+            this.q.action += " ("+data.keyStr+") VALUES ("+data.dataStr+")";
+        }
         this.q.others.returning = " RETURNING " + this.idField;
 
     } else if (this.adapter == "mysql") {
-        this.q.action = "INSERT INTO "+this.table+" SET ?";
+        this.q.action += " SET ?";
         this.values = data;
-
-    } else if (this.adapter == "sqlite") {
-        data = this._cleanData(data);
-        this.q.action = "INSERT INTO "+this.table+" ("+data.keyStr+") VALUES("+data.dataStr+")";
     }
 
     if (callback) this._query(callback);
