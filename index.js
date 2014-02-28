@@ -120,10 +120,14 @@ fn.toString = function() {
         this.q.others.offset +
         this.q.others.returning;
 
-    return _str.clean(this.q.action + " " +
-           this.q.from + " " +
-           this.q.where + " " +
-           other);
+    var query = _str.clean(this.q.action + " " +
+       this.q.from + " " +
+       this.q.where + " " +
+       other);
+
+    this._rebuild();
+
+    return query;
 };
 
 fn._query = function(callback) {
@@ -151,8 +155,6 @@ fn._query = function(callback) {
     } else {
         this.query(query, values, newCallback);
     }
-
-    this._rebuild();
 };
 
 ///////////////////////////////////////
