@@ -324,7 +324,7 @@ For Postgres, #insert() also returns the ID attribute.
 <a name="returning" />
 ### Query: returning(fields, [callback])
 
-* __fields__ `string` `array` — the name of the field to return, or an array of fields.
+* __fields__ `string` `string[]` — the name of the field to return, or an array of fields.
 
 Adding the #returning() method to a query chain (either __insert__ or __update__)
 
@@ -341,4 +341,4 @@ Values provided as a JSON will be sent to the server as an hstore data type, a s
 <a name="noescape" />
 ### Data type: no escape (raw string)
 
-Enclose the value in two nested arrays to avoid any value escaping. So `[[\n]]` will result in a String of `'\n'` and not `'\\n'` as usual.
+Enclose the value in two nested arrays to avoid any value escaping. So `[['\n']]` will result in a String of `'\n'` and not `'\\n'` as usual.
