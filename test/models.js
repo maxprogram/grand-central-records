@@ -3,7 +3,7 @@ var GCR = require('..');
 
 describe('models', function() {
 
-var db = new GCR({ adapter: 'pg' });
+var db = new GCR({ adapter: 'test' });
 var Model;
 
 describe('', function() {
