@@ -60,7 +60,7 @@ describe('with map', function() {
     });
 
     it('should map getters', function() {
-        Model._modelOps.getters = {
+        Model._model.getters = {
             fullName: function() {
                 return this.first + ' ' + this.last;
             }
@@ -72,7 +72,7 @@ describe('with map', function() {
     });
 
     it('should map methods', function() {
-        Model._modelOps.methods = {
+        Model._model.methods = {
             ageDifference: function(n) {
                 return this.age - n;
             }

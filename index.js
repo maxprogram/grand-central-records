@@ -56,9 +56,13 @@ var ORM = function(connection, table, options){
     }
 
     this._options = options;
-    this._model = options.modelOptions;
     this.verbose = verbose;
     this.table = table;
+
+    if (options.modelOptions) {
+        this._model = options.modelOptions;
+        this._schema = options.modelOptions.schema;
+    }
 
     this.idField = options.idAttribute || "id";
     this.values = null;

@@ -20,7 +20,7 @@ var fn = Postgres.prototype;
 
 module.exports = Postgres;
 
-fn.query = function (sql,values,cb){
+fn.query = function(sql, values, cb) {
 
     var client, self = this, verbose = false;
 
@@ -35,12 +35,11 @@ fn.query = function (sql,values,cb){
 
     var t1 = new Date().getTime();
 
-    Step(function connect(){
-        var Client = pg.Client;
-        client = new Client(_options);
+    Step(function connect() {
+        client = new pg.Client(_options);
         client.connect(this);
 
-    }, function runQueries(err,client){
+    }, function runQueries(err, client) {
         if (err) throw err;
 
         if (typeof sql === 'object' && sql.text) {
@@ -66,8 +65,9 @@ fn.query = function (sql,values,cb){
         // query(sql, values, cb)
         else client.query(sql, values, this);
 
-    }, function finish(err, results){
+    }, function finish(err, results) {
         client.end();
+
         if (verbose) {
             var t2 = new Date().getTime();
             if (Array.isArray(sql)) {

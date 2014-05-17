@@ -4,14 +4,14 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 
 ### TODO
 
+* Switch from Step>async
 * Finish tests
 * Finish Query Method docs (below)
 * Model#save()
 * Model#remove()
-* db#getColumns()
+* PG > db#getColumns()
 * Model validations
 * MySQL Pool Connections
-* Separate multiple queries for PG (like MySQL)
 * Migration / synchronization
 
 ### Custom ORM
@@ -52,6 +52,12 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 * [Models](#models)
 * [Expansion of models](#expansion)
 * [reload()](#reload)
+
+### Other functions
+
+* [setTable](#setTable)
+* [addGetter](#addGetter)
+* [addMethod](#addMethod)
 
 ### Query methods
 
@@ -268,6 +274,27 @@ User.find(1, function(err, user) {
     console.log(user.name); //= Adam (the original)
 });
 ```
+
+---------------------------------------
+## Other functions:
+
+<a name="setTable"/>
+### setTable(table)
+
+Changes the table name of the database/model.
+
+```js
+db.setTable('products');
+// or
+Products.setTable('products').find(1);
+```
+
+<a name="addGetter"/>
+### addGetter(name, fn)
+
+<a name="addMethod"/>
+### addMethod(name, fn)
+
 ---------------------------------------
 ## Common Query Methods:
 
