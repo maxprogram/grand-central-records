@@ -4,7 +4,6 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 
 ### TODO
 
-* Switch from Step>async
 * Finish tests
 * Finish Query Method docs (below)
 * Model#save()
@@ -74,6 +73,7 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 
 ### Postgres
 
+* [end()](#end)
 * [Query: returning()](#returning)
 * [Data type: Array](#array)
 * [Data type: hstore](#hstore)
@@ -354,6 +354,11 @@ For Postgres, #insert() also returns the ID attribute.
 
 ---------------------------------------
 ## *Postgres*
+
+<a name="end" />
+### db.end()
+
+Ends the Postgres pool connection. Connection will end automatically after 10 seconds if no queries are running. (Otherwise a new connection begins when a query is run.)
 
 <a name="returning" />
 ### Query: returning(fields, [callback])

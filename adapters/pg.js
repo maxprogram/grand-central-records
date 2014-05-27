@@ -1,5 +1,5 @@
 var pg = require('pg'),
-    Step = require('step'),
+    async = require('async'),
     log = require('../log').database,
     _ = require('underscore'),
     _str = require('underscore.string');
@@ -14,15 +14,39 @@ function Postgres(connect){
         database: connect.database
     };
     this.q = "";
+    this._inProgress = {};
 }
 
 var fn = Postgres.prototype;
 
 module.exports = Postgres;
 
+fn.init = function(cb) {
+    if (this.client) {
+        this._resetTime();
+        return cb();
+    }
+    this.client = new pg.Client(_options);
+    this.client.connect(cb);
+    this._resetTime();
+}
+
+fn._resetTime = function() {
+    if (this._timer) clearTimeout(this._timer);
+    this._timer = setTimeout(function() {
+        if (this.client && !Object.keys(this._inProgress).length) {
+            this.client.end();
+            this.client = null;
+            this._inProgress = {};
+        } else {
+            this._resetTime();
+        }
+    }.bind(this), 10000);
+};
+
 fn.query = function(sql, values, cb) {
 
-    var client, self = this, verbose = false;
+    var self = this, verbose = false;
 
     var logging = function(){};
     if (typeof sql === 'object'){
@@ -34,39 +58,42 @@ fn.query = function(sql, values, cb) {
     }
 
     var t1 = new Date().getTime();
+    this._inProgress[t1] = sql;
 
-    Step(function connect() {
-        client = new pg.Client(_options);
-        client.connect(this);
-
-    }, function runQueries(err, client) {
-        if (err) throw err;
+    var runQueries = function (err) {
+        if (err) return cb(err);
 
         if (typeof sql === 'object' && sql.text) {
         // query({options}, cb)
             cb = values;
             logging("Executing object...");
-            client.query(sql, this);
+            this.client.query(sql, finish);
 
         } else if (typeof values === 'function' && typeof sql === 'string') {
         // query(sql, cb)
             cb = values;
-            client.query(sql, this);
+            this.client.query(sql, finish);
 
         } else if (typeof sql === 'object') {
         // query([sql, sql], cb)
-            var group = this.group();
             cb = values;
-            logging("Executing series...");
-            for (var i=0; i < sql.length; i++){
-                if (sql[i] !== "") client.query(sql[i], group());
-            }
+            logging("Executing queries...");
+            async.each(sql, function(q, next) {
+                if (q.trim() !== "") this.client.query(q, next);
+                else next();
+            });
         }
         // query(sql, values, cb)
-        else client.query(sql, values, this);
+        else this.client.query(sql, values, finish);
 
-    }, function finish(err, results) {
-        client.end();
+    }.bind(this);
+
+    this.init(runQueries);
+
+    function finish(err, results) {
+        if (err) return cb(err);
+
+        delete self._inProgress[t1];
 
         if (verbose) {
             var t2 = new Date().getTime();
@@ -91,7 +118,7 @@ fn.query = function(sql, values, cb) {
         }
 
         cb(err, results);
-    });
+    };
 
 };
 

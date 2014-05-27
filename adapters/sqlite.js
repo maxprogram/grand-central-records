@@ -1,5 +1,5 @@
 var sqlite3 = require('sqlite3'),
-    Step = require('step'),
+    async = require('async'),
     log = require('../log').database,
     _ = require('underscore'),
     _str = require('underscore.string');
@@ -35,24 +35,22 @@ fn.query = function (sql,values,cb) {
 
     var db = new sqlite3.Database(_options.database);
 
-    Step(function(){
-        db.serialize(this);
-    }, function(){
+    db.serialize(runQueries);
 
+    function runQueries() {
         // query([sql,sql], cb)
         if (Array.isArray(sql) && typeof values === 'function') {
-            var group = this.group();
             cb = values;
-            logging("Executing series...");
-            sql.forEach(function(q) {
-                db.all(q, group());
-            });
+            logging("Executing queries...");
+            async.each(sql, function(q, next) {
+                db.all(q, next);
+            }, getId);
         }
 
         // query(sql, cb)
         else if (typeof values === 'function') {
             cb = values;
-            db.all(sql, this);
+            db.all(sql, getId);
         }
 
         // query(sql, [values], cb)
@@ -60,19 +58,20 @@ fn.query = function (sql,values,cb) {
             values.forEach(function(v,i) {
                 sql = sql.replace(new RegExp("%"+i,"g"), v);
             });
-            db.all(sql, this);
+            db.all(sql, getId);
         }
+    }
 
-    }, function(err, rows){
-        // Get insert row ID
-        var _this = this;
+    // Get insert row ID
+    function getId(err, rows) {
         if (!Array.isArray(sql) && !err && _.contains(sql.split(" "), "INSERT")) {
             db.get("SELECT last_insert_rowid() AS id", function(err,row){
-                _this(err, row.id);
+                finish(err, row.id);
             });
-        } else this(err, rows);
+        } else finish(err, rows);
+    }
 
-    }, function(err, rows){
+    function finish(err, rows) {
         db.close();
 
         var t2 = new Date().getTime();
@@ -86,7 +85,6 @@ fn.query = function (sql,values,cb) {
 
         cb(err, rows);
     });
-
 };
 
 fn.escape = function(d) {

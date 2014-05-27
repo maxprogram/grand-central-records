@@ -1,5 +1,4 @@
 var mysql = require('mysql'),
-    Step = require('step'),
     log = require('../log').database,
     _ = require('underscore');
 
