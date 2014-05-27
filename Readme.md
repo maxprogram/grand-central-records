@@ -171,29 +171,36 @@ db.query('SELECT :name AS a', { name: 'hello' }, function(err, res) {
 })
 ```
 <a name="queue" />
-### queue(query, [values])
+### queue()
 
 Add query to queue for later execution. Query can be a raw query string, a chained method object, or an array of either. Values can't be passed to objects or arrays (only raw strings);
 
+#### queue.add(query, [values])
+#### queue.print() || queue.get()
+#### queue.run(callback)
+
 ```js
-db.queue('SELECT 1 AS a')
-  .queue('SELECT %1', [2])
-  .queue('SELECT :name AS a', { name: 'hello' })
+var queue = db.queue();
+
+queue.add('SELECT 1 AS a')
+  .add('SELECT %1', [2])
+  .add('SELECT :name AS a', { name: 'hello' })
   .run(function(err, res) {
     console.log(res[0].a); //= 1
     console.log(res[2].a); //= hello
 });
 
-db.queue(Model.find(1))
-  .queue(Model.select('name').limit(1))
+queue.add(Model.find(1))
+  .add(Model.select('name').limit(1))
   .run(function(err, res) {
     console.log(res[0]); // (row with ID of 1)
     console.log(res[1]); // (first row with only name column)
 });
 
-db.queue(['SELECT 1 AS a', 'SELECT 2 AS a']);
+queue.add(['SELECT 1 AS a', 'SELECT 2 AS a']);
 . . .
-db.run(function(err, res) {
+console.log(queue.print()); //= "SELECT 1 AS a; SELECT 2 AS a;"
+queue.run(function(err, res) {
     console.log(res[0].a); //= 1
     console.log(res[1].a); //= 2
 });
