@@ -1,6 +1,6 @@
 // Custom ORM that connects with MySQL, Postgres, SQLite3, MongoDB
 
-var _    = require('underscore'),
+var _    = require('lodash'),
     _str = require('underscore.string'),
     path = require('path'),
     log = require('./log'),
@@ -33,11 +33,7 @@ var ORM = function(connection, table, options){
             this.adapter = "pg";
             var Postgres = require('./adapters/pg');
             this.engine = new Postgres(connection);
-            this.end = function() {
-                if (!this.engine.client) return;
-                this.engine.client.end();
-                this.engine.client = null;
-            }.bind(this);
+            this.end = this.engine.end;
 
         } else if (_.contains(['mysql','mySQL','MySQL'], adapter)) {
             this.adapter = "mysql";

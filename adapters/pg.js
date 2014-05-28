@@ -1,7 +1,6 @@
 var pg = require('pg'),
-    async = require('async'),
     log = require('../log').database,
-    _ = require('underscore'),
+    _ = require('lodash'),
     _str = require('underscore.string');
 
 var _options;
@@ -13,6 +12,9 @@ function Postgres(connect){
         password: connect.password,
         database: connect.database
     };
+
+    _.bindAll(this);
+
     this.q = "";
     this._inProgress = {};
 }
@@ -38,14 +40,18 @@ fn._resetTime = function() {
             this.client.end();
             this.client = null;
             this._inProgress = {};
-        } else {
-            this._resetTime();
         }
-    }.bind(this), 10000);
+        if (Object.keys(this._inProgress).length) this._resetTime();
+    }.bind(this), 4000);
+};
+
+fn.end = function() {
+    if (this.client) this.client.end();
+    if (this._timer) clearTimeout(this._timer);
+    this.client = null;
 };
 
 fn.query = function(sql, values, cb) {
-
     var self = this, verbose = false;
 
     var logging = function(){};

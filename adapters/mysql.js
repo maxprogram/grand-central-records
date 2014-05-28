@@ -1,6 +1,6 @@
 var mysql = require('mysql'),
     log = require('../log').database,
-    _ = require('underscore');
+    _ = require('lodash');
 
 var _options;
 

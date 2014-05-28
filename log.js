@@ -1,4 +1,4 @@
-var _ = require('underscore');
+var _ = require('lodash');
 
 var bold  = '\033[1m',
     blue  = '\033[34m',

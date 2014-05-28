@@ -1,7 +1,7 @@
 var sqlite3 = require('sqlite3'),
     async = require('async'),
     log = require('../log').database,
-    _ = require('underscore'),
+    _ = require('lodash'),
     _str = require('underscore.string');
 
 var _options;
