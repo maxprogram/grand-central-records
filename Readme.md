@@ -8,6 +8,7 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 * Finish Query Method docs (below)
 * Model#save()
 * Model#remove()
+* Query joins (see https://www.npmjs.org/package/sql)
 * PG > db#getColumns()
 * Model validations
 * MySQL Pool Connections

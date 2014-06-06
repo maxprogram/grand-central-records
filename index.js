@@ -144,6 +144,7 @@ fn.toString = function() {
 
     return query;
 };
+fn.toQuery = fn.toString;
 
 fn._query = function(callback) {
     var modelOps = this._model,
