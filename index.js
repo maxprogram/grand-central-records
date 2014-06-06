@@ -107,6 +107,11 @@ fn.setTable = function(table) {
     return this;
 };
 
+fn.setIdAttribute = function(id) {
+    this.idField = id;
+    return this;
+};
+
 ///////////////////////////////////////
 
 fn._rebuild = function() {
