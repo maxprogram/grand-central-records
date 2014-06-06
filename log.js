@@ -1,13 +1,5 @@
 var _ = require('lodash');
-
-var bold  = '\033[1m',
-    blue  = '\033[34m',
-    green = '\033[32m',
-    cyan  = '\033[36m',
-    red   = '\033[31m',
-    mag   = '\033[35m',
-    yell  = '\033[33m',
-    reset = '\033[0m';
+var colors = require('colors');
 
 var fn = exports;
 
@@ -17,7 +9,7 @@ fn.log = function(str) {
     var msg;
 
     if (fn.logger == console.log) {
-        msg = bold + blue + '[GCR] ' + reset + str;
+        msg = '[GCR] '.bold.blue + str;
         fn.logger(msg);
     } else {
         fn.logger(str);
@@ -31,7 +23,7 @@ fn.error = function(str, kill) {
     var msg;
 
     if (fn.logger == console.log)
-        msg = bold + red + 'ERROR' + reset + ' ' + str;
+        msg = 'ERROR '.bold.red + str;
     else msg = 'ERROR: ' + str;
 
     fn.log(msg);
@@ -40,13 +32,11 @@ fn.error = function(str, kill) {
 };
 
 fn.warn = function(str) {
-    var msg = bold + yell + 'WARNING' + reset;
-    msg += ' ' + str;
-
+    var msg = 'WARNING '.bold.yellow + str;
     return fn.log(msg);
 };
 
-fn.database = function(str, type, time) {
+fn.database = function(str, type, ms) {
 
     type = type || '';
 
@@ -56,11 +46,19 @@ fn.database = function(str, type, time) {
         return txt + str;
     }
 
-    var task = (type==='') ? '' : type + " (" + time + "ms)";
+    var task = (type==='') ? '' : type + " (" + convertTime(ms) + ")";
 
     if (fn.logger == console.log) {
-        fn.logger(bold + cyan + cols(task) + reset + str);
+        fn.logger(cols(task).bold.cyan + str);
     } else {
         fn.logger(cols(task) + str);
     }
 };
+
+function convertTime(ms) {
+    if (ms < 1000) return ms +'ms';
+    if (ms < 60000) return (ms/1000).toFixed(2) + 's';
+    var m = Math.floor(ms/60000);
+    var s = Math.round((ms - m * 60000)/1000);
+    return m + 'm' + s + 's';
+}
