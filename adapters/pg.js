@@ -175,12 +175,19 @@ fn.escape = function(d){
     // 2 nested arrays nullifies escape
     if (Array.isArray(d[0])) return d[0][0];
 
+    // Array
     if (Array.isArray(d)) {
         return "'{" + d.map(function(a) {
             return _this.escape(a).replace(/'/g,'"');
         }).join(",") + "}'";
     }
 
+    // Subquery
+    if (d.q && typeof d.q === 'object') {
+        return "(" + d.toString() + ")";
+    }
+
+    // Object/hstore
     if (typeof d === "object") {
         var keys = Object.keys(d),
             hstore = [], value;
