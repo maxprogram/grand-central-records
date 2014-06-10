@@ -1,5 +1,5 @@
-var _ = require('lodash');
-var colors = require('colors');
+var colors = require("colors");
+var hl = require("./lib/highlight/cli-highlight");
 
 var fn = exports;
 
@@ -41,17 +41,18 @@ fn.database = function(str, type, ms) {
     type = type || '';
 
     function cols(txt) {
-        var str = " ", spaces = 23 - txt.length;
+        var str = " ", spaces = 16 - txt.length;
         for (var i = 0; i < spaces; i++) str += " ";
         return txt + str;
     }
 
-    var task = (type==='') ? '' : type + " (" + convertTime(ms) + ")";
+    var task = (type==='') ? '' : type;
+    var time = "(" + convertTime(ms) + ")";
 
     if (fn.logger == console.log) {
-        fn.logger(cols(task).bold.cyan + str);
+        fn.logger(cols(task).bold.cyan + hl(str) + ' ' + time.inverse);
     } else {
-        fn.logger(cols(task) + str);
+        fn.logger(cols(task) + str + time);
     }
 };
 
