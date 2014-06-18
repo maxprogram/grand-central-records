@@ -84,7 +84,7 @@ fn.query = function (sql,values,cb) {
         }
 
         cb(err, rows);
-    });
+    }
 };
 
 fn.escape = function(d) {

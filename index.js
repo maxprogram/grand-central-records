@@ -117,7 +117,8 @@ fn.setIdAttribute = function(id) {
 fn._rebuild = function() {
     this.q = {
         action: "SELECT *",
-        from: "FROM " + this.table,
+        from: "FROM",
+        table: "%t%",
         where: "",
         others: {
             orderBy: "",
@@ -129,16 +130,19 @@ fn._rebuild = function() {
 };
 
 fn.toString = function() {
-    var other = "" +
-        this.q.others.orderBy +
-        this.q.others.limit +
-        this.q.others.offset +
+    var other = " " +
+        this.q.others.orderBy + " " +
+        this.q.others.limit + " " +
+        this.q.others.offset + " " +
         this.q.others.returning;
 
-    var query = _str.clean(this.q.action + " " +
-       this.q.from + " " +
-       this.q.where + " " +
-       other);
+    var query = _str.clean([
+        this.q.action,
+        this.q.from,
+        this.q.table,
+        this.q.where,
+        other
+    ].join(' ')).replace(/%t%/g, this.table);
 
     this._rebuild();
 
@@ -171,4 +175,11 @@ fn._query = function(callback) {
     } else {
         this.query(query, values, newCallback);
     }
+};
+
+///////////////////////////////////////
+
+fn.sync = function(data, callback) {
+    if (!this.engine.sync) return new Error("Sync doesn't exist for this adapter");
+    this.engine.sync(this.table, data, callback);
 };
