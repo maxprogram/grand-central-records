@@ -76,6 +76,7 @@ var fn = ORM.prototype;
 
 require('./lib/query')(fn);
 require('./lib/queue')(fn);
+require('./lib/promise')(fn);
 require('./lib/chain')(fn);
 
 model.setModelFunctions(fn);
@@ -155,5 +156,6 @@ fn.toString = function() {
 };
 fn.toQuery = fn.toString;
 
+///////////////////////////////////////
 
 module.exports = ORM;

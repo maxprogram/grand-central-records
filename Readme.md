@@ -4,7 +4,7 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 
 ### TODO
 
-* Add Promises
+* Implement Promises in SQl adapters
 * Model validations
 * Model#save()
 * Model#remove()
@@ -23,6 +23,7 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
     * .query() -- executes the given query
     * .queue(query string or chain) (accepts array, string, object)
     * .run() -- executes all queries in the queue
+* Callbacks *or* promises
 
 ### Inspiration
 
@@ -39,6 +40,7 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 
 * [GCR()](#gcr)
 * [model()](#model)
+* [Promises](#promises)
 
 ### Raw queries
 
@@ -83,8 +85,6 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 <a name="gcr" />
 ### new GCR(connection, [table], [options])
 
-__Arguments__
-
 * __connection__ `json` — Database connection parameters.
 	* *adapter* — mysql/MySQL, postgresql/postgres/pg, sqlite3/sqlite
 	* *host*, *database*, *username*, *password* — connection parameters
@@ -123,8 +123,6 @@ Model.select(["name","address"]).where({admin: true}, function(err, result) {
 <a name="model" />
 ### model(table, [options])
 
-__Arguments__
-
 * __table__ `string` — The name of the table the model is associated with.
 * __options__ `json` — See above.
 
@@ -143,6 +141,36 @@ var db = new GCR({
 
 var User = db.model("users"),
     Project = db.model("projects");
+```
+
+### Promises
+
+Execute a query using a callback:
+```js
+Model.find(52, function(err, res) {...});
+Model.find(52).select('id').run(function(err, res) {...});
+```
+
+Or by using promises:
+```js
+Model.find(52)
+  .then(function(res) {
+    return res;
+  })
+  .then(function(res) {
+    // do something...
+  })
+  .fail(function(err) {
+    throw err;
+  });
+
+// Or in parallel using a promise library:
+Q.all([
+    Model.find(52).run(),
+    Model.where({ type: 2 }).run()
+]).then(function(res) {
+    // do something...
+});
 ```
 
 ---------------------------------------
@@ -203,6 +231,9 @@ queue.run(function(err, res) {
     console.log(res[0].a); //= 1
     console.log(res[1].a); //= 2
 });
+// OR as promise //
+queue.run().then(function(res) {...})
+  .fail(function(err) {...});
 ```
 ---------------------------------------
 <a name="models" />
