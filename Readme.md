@@ -164,13 +164,13 @@ Model.find(52)
     throw err;
   });
 
-// Or in parallel using a promise library:
-Q.all([
+// Or in parallel using #parallel() as an alieas for Q's 'all'
+db.parallel([
     Model.find(52).run(),
     Model.where({ type: 2 }).run()
-]).then(function(res) {
+]).done(function(res) {
     // do something...
-});
+}).fail(function(err) {...});
 ```
 
 ---------------------------------------
