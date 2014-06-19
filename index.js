@@ -1,4 +1,4 @@
-// Custom ORM that connects with MySQL, Postgres, SQLite3, MongoDB
+// Custom ORM that connects with MySQL, Postgres, SQLite3
 
 var _    = require('lodash'),
     _str = require('underscore.string'),
@@ -75,10 +75,11 @@ var ORM = function(connection, table, options){
 var fn = ORM.prototype;
 
 require('./lib/query')(fn);
+require('./lib/queue')(fn);
+require('./lib/promise')(fn);
 require('./lib/chain')(fn);
-model.setModelFunctions(fn);
 
-module.exports = ORM;
+model.setModelFunctions(fn);
 
 ///////////////////////////////////////
 
@@ -110,6 +111,11 @@ fn.setTable = function(table) {
 fn.setIdAttribute = function(id) {
     this.idField = id;
     return this;
+};
+
+fn.sync = function(data, callback) {
+    if (!this.engine.sync) return new Error("Sync doesn't exist for this adapter");
+    this.engine.sync(this.table, data, callback);
 };
 
 ///////////////////////////////////////
@@ -150,36 +156,6 @@ fn.toString = function() {
 };
 fn.toQuery = fn.toString;
 
-fn._query = function(callback) {
-    var modelOps = this._model,
-        query = this.toString(),
-        values = this.values;
-
-    var newCallback = function(err,res,fields){
-        if (err) log.error(err, false);
-        else {
-            if (modelOps && modelOps.map) {
-                var data = Array.isArray(res) ? res : modelOps.data || [];
-                modelOps._query = query;
-                callback(null, model.map(data, modelOps));
-            } else {
-                callback(null, res);
-            }
-        }
-    };
-
-    if (!this.table) {
-        callback(log.error("Model doesn't exist! (No table provided)"));
-    } else if (this.table == ':test:') {
-        newCallback(null, query);
-    } else {
-        this.query(query, values, newCallback);
-    }
-};
-
 ///////////////////////////////////////
 
-fn.sync = function(data, callback) {
-    if (!this.engine.sync) return new Error("Sync doesn't exist for this adapter");
-    this.engine.sync(this.table, data, callback);
-};
+module.exports = ORM;
