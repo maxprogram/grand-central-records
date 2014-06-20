@@ -18,12 +18,9 @@ var ORM = function(connection, table, options){
         table = null;
     } else if (!options) options = {};
 
-    var adapter = connection.adapter,
-        verbose = options.hasOwnProperty("verbose") ? options.verbose : false;
-
-    if (typeof options.logger === 'function') log.logger = options.logger;
-
     // Load database adapters
+
+    var adapter = connection.adapter;
 
     if (connection.engine){
         this.adapter = adapter;
@@ -55,6 +52,9 @@ var ORM = function(connection, table, options){
             return log.error("Database adapter '"+adapter+"' not recognized");
         }
     }
+
+    var verbose = options.hasOwnProperty("verbose") ? options.verbose : false;
+    if (_.isFunction(verbose)) log.logger = verbose;
 
     this._options = options;
     this.verbose = verbose;

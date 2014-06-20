@@ -29,6 +29,19 @@ describe('init', function() {
         assert.equal(Test.verbose, false);
         assert.equal(Test.table, null);
     });
+
+    it('should accept different logger', function() {
+        var called = false;
+        var Test = new GCR({ adapter: "test" }, ':test:', {
+            verbose: function(str) {
+                console.log('It worked!');
+                called = true;
+            }
+        });
+
+        Test.remove().where('id = 2').run();
+        assert(called);
+    });
 });
 
 });
