@@ -90,7 +90,7 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 	* *host*, *database*, *username*, *password* — connection parameters
 * __table__ `string` — An optional table name if only a single table is being queried.
 * __options__ `json` — Options to pass to the model.
-	* *verbose* `boolean` —  Turning verbose on will log all queries on the console. `false` by default.
+	* *verbose* `boolean` `function` —  Turning verbose on will log all queries on the console. `false` by default. If a function is provided, it will be used to log all outputs.
 	* *idAttribute* `string` — The name of the unique ID attribute field (defaults to 'id');
     * *map* `boolean` — Set to `true` to map query results to a model. Otherwise, results will be in their raw format.
 	* (see [Models](#models))
@@ -239,17 +239,10 @@ queue.run().then(function(res) {...})
 <a name="models" />
 ## Models
 
-To map query results to a model, pass `map: true` to model options, like this:
-
-```js
-var User = db.model('users', { map: true });
-```
-
-Define a schema for default values and validations [* validations not implemented yet].
+To map query results to a model, define a schema for default values and validations [* validations not implemented yet]. (To map results to a model *without* a schema, just define as an empty object `schema: {}`.)
 
 ```js
 var User = db.model('users', {
-    map: true,
     schema: {
         first: String,
         last:  String,
@@ -267,7 +260,7 @@ __Methods__ are functions that can be called on the model.
 
 ```js
 var User = db.model('users', {
-    map: true,
+    schema: {},
     methods: {
         add: function(n) {
             return this.number + n;
@@ -283,7 +276,7 @@ __Getters__ are methods that are called immediately and act as regular values fo
 
 ```js
 var User = db.model('users', {
-    map: true,
+    schema: {},
     getters: {
         first: function() { // No arguments
             return this.first.toUpperCase();

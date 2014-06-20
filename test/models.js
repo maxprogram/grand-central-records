@@ -40,7 +40,6 @@ var dummyData = [
 describe('with map', function() {
     it('should map data to model', function() {
         Model = db.model(':test:', {
-            map: true,
             data: dummyData,
             schema: {
                 first: String,
