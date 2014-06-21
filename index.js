@@ -158,4 +158,28 @@ fn.toQuery = fn.toString;
 
 ///////////////////////////////////////
 
+fn.addChain = function(name, func, map) {
+    this[name] = function() {
+        var lastArg = arguments[arguments.length - 1];
+        var callback = _.isFunction(lastArg) ? lastArg : null;
+        if (callback) delete arguments[arguments.length - 1];
+
+        var query = func.apply(this, arguments);
+
+        if (query instanceof Error) {
+            if (callback) return callback(query);
+            else return log.error(query);
+        } else if (_.isPlainObject(query.q)) {
+            query = query.toString();
+        } else if (_.isArray(query._queue) && query.print) {
+            query = query.print(' ');
+        }
+
+        var queue = this.queue().add(query).map(map);
+
+        if (callback) return queue.run(callback);
+        else return queue;
+    }
+};
+
 module.exports = ORM;

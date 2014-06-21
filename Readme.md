@@ -234,6 +234,10 @@ queue.run(function(err, res) {
 // OR as promise //
 queue.run().then(function(res) {...})
   .fail(function(err) {...});
+// Add custom mapping function for results
+queue.add(...).map(function(row) {
+    return row.id;
+}).run();
 ```
 ---------------------------------------
 <a name="models" />
