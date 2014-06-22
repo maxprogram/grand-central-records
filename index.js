@@ -158,7 +158,7 @@ fn.toQuery = fn.toString;
 
 ///////////////////////////////////////
 
-fn.addChain = function(name, func, map) {
+fn.addQueryMethod = function(name, func, map) {
     this[name] = function() {
         var lastArg = arguments[arguments.length - 1];
         var callback = _.isFunction(lastArg) ? lastArg : null;
