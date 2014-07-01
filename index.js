@@ -100,7 +100,7 @@ fn.model = function(table, options) {
 };
 
 fn.new = function(data) {
-    return new model.Model(data, this._model);
+    return new model.Model(data, this._model, this);
 };
 
 fn.setTable = function(table) {

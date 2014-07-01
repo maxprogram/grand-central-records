@@ -4,10 +4,7 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 
 ### TODO
 
-* Implement Promises in SQl adapters
-* Model validations
-* Model#save()
-* Model#remove()
+* Implement Promises in SQL adapters
 * Query joins (see https://www.npmjs.org/package/sql)
 * MySQL Pool Connections
 * Migration / synchronization
@@ -243,7 +240,7 @@ queue.add(...).map(function(row) {
 <a name="models" />
 ## Models
 
-To map query results to a model, define a schema for default values and validations [* validations not implemented yet]. (To map results to a model *without* a schema, just define as an empty object `schema: {}`.)
+To map query results to a model, define a schema for default values and validations. (To map results to a model *without* a schema, just define as an empty object `schema: {}`.)
 
 ```js
 var User = db.model('users', {
@@ -256,6 +253,34 @@ var User = db.model('users', {
     }
 });
 ```
+
+<a name="validations" />
+### Validations
+
+* `type`: type of input
+    + `String`
+    + `Number`
+    + `Boolean`
+    + `Date`
+    + `Buffer`
+    + `[value1, value2, value3, ...]` list of options
+    + `[String]` array of values (Postgres only)
+* `default`: default value if empty
+* `allowNull`: `false` requires a value (default is `true`)
+* `length`: the maximum length of a string
+* `max`: the maximum value of a number or length of a string
+* `min`: the minimum value of a number or length of a string
+* `not`: an array of incompatible values
+* `match`: a RegEx the string must match
+
+__Custom Messages (%n replaced with required value):__
+* `wrongType`: message if type doesn't match
+* `tooShort`: message if string/number is too low
+* `tooLong`: message if string/number is too high
+* `doesntMatch`: message if RegEx doesn't match
+* `isNull`: message if value is empty
+* `notInList`: message if value isn't in list of options
+* `inList`: message if value is in list of incompatible values
 
 <a name="expansion" />
 ### Expansion of models
