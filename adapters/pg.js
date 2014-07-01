@@ -97,9 +97,8 @@ fn.query = function(sql, values, cb) {
     this.init(runQueries);
 
     function finish(err, results) {
-        if (err) return cb(err);
-
         delete self._inProgress[t1];
+        if (err) return cb(err);
 
         if (verbose) {
             var t2 = new Date().getTime();
