@@ -5,6 +5,24 @@ describe('models', function() {
 
 var db = new GCR({ adapter: 'test' });
 var Model;
+var schema = {
+    first: String,
+    last: {
+        type: String,
+        length: 15,
+        allowNull: false
+    },
+    age: {
+        type: Number,
+        min: 10,
+        not: [18,19]
+    },
+    type: {
+        type: ['Person','Superhero'],
+        default: 'Person',
+        notInList: 'needs to be a Person or Superhero!'
+    }
+};
 
 describe('', function() {
     it('should accept model in connection', function() {
@@ -41,12 +59,7 @@ describe('with map', function() {
     it('should map data to model', function() {
         Model = db.model(':test:', {
             data: dummyData,
-            schema: {
-                first: String,
-                last: String,
-                age: Number,
-                type: {type: String, default: 'Person'}
-            }
+            schema: schema
         });
         Model.all(function(err, models) {
             assert.ifError(err);
@@ -100,6 +113,33 @@ describe('with map', function() {
         });
         assert.equal(spiderman.fullName, 'Peter Parker');
         assert.equal(spiderman.ageDifference(3), 17);
+    });
+
+    it('should validate data', function() {
+        var spiderman = Model.new({
+            first: "Peter",
+            last: "Parker78910111213",
+            //age: 20
+        });
+
+        var val = spiderman.validate();
+        assert.equal(val.last, "should not be more than 15 characters");
+
+        spiderman.last = null;
+        val = spiderman.validate();
+        assert.equal(val.last, "shouldn't be empty");
+
+        spiderman.age = 8;
+        val = spiderman.validate();
+        assert.equal(val.age, "should be at least 10");
+
+        spiderman.age = 18;
+        val = spiderman.validate();
+        assert.equal(val.age, "shouldn't be included in: 18, 19");
+
+        spiderman.type = 'Place';
+        val = spiderman.validate();
+        assert.equal(val.type, 'needs to be a Person or Superhero!');
     });
 
 });
