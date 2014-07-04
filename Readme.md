@@ -47,6 +47,8 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
 ### Models
 
 * [Models](#models)
+* [Validations](#validations)
+* [Creating & Updating Models](#newmodels)
 * [Expansion of models](#expansion)
 * [reload()](#reload)
 
@@ -281,6 +283,33 @@ __Custom Messages (%n replaced with required value):__
 * `isNull`: message if value is empty
 * `notInList`: message if value isn't in list of options
 * `inList`: message if value is in list of incompatible values
+
+<a name="newmodels" />
+### Creating & updating models
+
+Creating a new model:
+```js
+var tiger = Animal.new({ name: 'Tiger' });
+
+// Run validations and insert into DB:
+tiger.save(function(err) { ... });
+// PROMISES //
+tiger.save().then(function(err) { ... });
+```
+
+Updating a model:
+```js
+Animal.where({ name: 'Tiger' }, function(err, animals) {
+    animals[0].name = 'Siberian Tiger';
+    // Run validations and update in DB:
+    animals[0].save(function(err) { ... });
+});
+// PROMISES //
+Animal.where({ name: 'Tiger' }).then(function(animals) {
+    animals[0].name = 'Siberian Tiger';
+    return animals[0].save().run();
+}).fail(function(err) { ... });
+```
 
 <a name="expansion" />
 ### Expansion of models

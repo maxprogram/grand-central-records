@@ -136,6 +136,8 @@ fn._rebuild = function() {
 };
 
 fn.toString = function() {
+    if (!this.q) return '';
+
     var other = " " +
         this.q.others.orderBy + " " +
         this.q.others.limit + " " +
