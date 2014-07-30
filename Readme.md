@@ -250,6 +250,10 @@ var User = db.model('users', {
         first: String,
         last:  String,
         admin: { type: Boolean, default: false },
+        group: function(val) {
+            if (val % 2 !== 0) return 'must be even';
+            return true;
+        },
         created_at: Date,
         updated_at: Date
     }
@@ -267,6 +271,7 @@ var User = db.model('users', {
     + `Buffer`
     + `[value1, value2, value3, ...]` list of options
     + `[String]` array of values (Postgres only)
+    + `function(value){}` custom validation (returns `true` if valid, `false` or a message string if invalid)
 * `default`: default value if empty
 * `allowNull`: `false` requires a value (default is `true`)
 * `length`: the maximum length of a string
