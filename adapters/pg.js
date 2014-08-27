@@ -54,6 +54,11 @@ fn.end = function() {
 fn.query = function(sql, values, cb) {
     var self = this, verbose = false;
 
+    if (typeof values === 'function') {
+        cb = values;
+        values = null;
+    }
+
     var logging = function(){};
     if (typeof sql === 'object'){
         verbose = sql.verbose;
