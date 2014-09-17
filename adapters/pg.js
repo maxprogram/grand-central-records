@@ -103,7 +103,7 @@ fn.query = function(sql, values, cb) {
 
     function finish(err, results) {
         delete self._inProgress[t1];
-        if (err) return cb(err);
+        if (err) return cb(err + '(query: ' + sql + ')');
 
         if (verbose) {
             var t2 = new Date().getTime();
