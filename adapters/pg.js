@@ -1,14 +1,13 @@
 var _ = require('lodash');
 var Q = require('q');
 var pg = require('pg');
-var log = require('../lib/log').database;
 var _str = require('underscore.string');
 
 var _options = {};
 var endConnectionAfter = 4000;
 
 
-var Postgres = module.exports = function(connect) {
+var Postgres = module.exports = function(connect, log) {
     _options = {
         host: connect.host || 'localhost',
         user: connect.username || 'postgres',
@@ -21,6 +20,7 @@ var Postgres = module.exports = function(connect) {
     this.verbose = connect.verbose;
     this.q = "";
     this._inProgress = {};
+    this.log = log;
 };
 
 var fn = Postgres.prototype;
@@ -63,7 +63,7 @@ fn.init = function() {
 // Traditional SQL query
 fn.query = function(sql, values) {
     var _this = this;
-    var _log = this.verbose ? log : function(){};
+    var _log = this.verbose ? this.log : function(){};
 
     var t1 = new Date().getTime();
     this._inProgress[t1] = sql;
@@ -107,8 +107,9 @@ fn.query = function(sql, values) {
     })
     .catch(function(err) {
         delete _this._inProgress[t1];
-        err += ' (query: "' + sql + '")';
-        return Q.reject(new Error(err));
+        if (err instanceof Error)
+            err.message += ' (query: "' + sql + '")';
+        return Q.reject(err);
     });
 };
 

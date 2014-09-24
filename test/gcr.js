@@ -39,7 +39,7 @@ describe('init', function() {
             }
         });
 
-        Test.remove().where('id = 2').run();
+        Test.sync();
         assert(called);
     });
 });

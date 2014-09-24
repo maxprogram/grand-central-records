@@ -1,9 +1,10 @@
 // Custom ORM that connects with MySQL, Postgres, SQLite3
 
-var _    = require('lodash'),
+var _ = require('lodash'),
+    Q = require('q'),
     _str = require('underscore.string'),
     path = require('path'),
-    log = require('./lib/log'),
+    Log = require('./lib/log'),
     model = require('./lib/model');
 
 
@@ -12,16 +13,20 @@ var _    = require('lodash'),
 
 var ORM = function(connection, table, options) {
     options = options || {};
-    if (!connection || !connection.adapter)
-        return log.error("No connection adapter provided");
     if (typeof table === "object") {
         options = table;
         table = null;
     }
 
     var verbose = options.hasOwnProperty("verbose") ? options.verbose : false;
-    if (_.isFunction(verbose)) log.logger = verbose;
     connection.verbose = verbose;
+
+    var logger = options.logger;
+    if (_.isFunction(verbose)) logger = verbose;
+    var log = this.log = new Log(logger);
+
+    if (!connection || !connection.adapter)
+        return log.error("No connection adapter provided");
 
     // Load database adapters
 
@@ -35,20 +40,20 @@ var ORM = function(connection, table, options) {
         if (_.contains(['postgres','pg','postgresql'], adapter)) {
             this.adapter = "pg";
             var Postgres = require('./adapters/pg');
-            this.engine = new Postgres(connection);
+            this.engine = new Postgres(connection, log.database.bind(log));
             this.end = this.engine.end;
 
         } else if (_.contains(['mysql','mySQL','MySQL'], adapter)) {
             this.adapter = "mysql";
             var Mysql = require('./adapters/mysql');
-            this.engine = new Mysql(connection);
+            this.engine = new Mysql(connection, log.database.bind(log));
 
         } else if (_.contains(['sqlite','sqlite3'], adapter)) {
             this.adapter = "sqlite";
             if (connection.database != ':memory:')
                 connection.database = path.join(connection.dir || '', connection.database);
             var Sqlite = require('./adapters/sqlite');
-            this.engine = new Sqlite(connection);
+            this.engine = new Sqlite(connection, log.database.bind(log));
             this.end = this.engine.close;
 
         } else if (adapter == 'test') {
@@ -117,7 +122,7 @@ fn.setIdAttribute = function(id) {
 };
 
 fn.sync = function(data, callback) {
-    if (!this.engine.sync) return new Error("Sync doesn't exist for this adapter");
+    if (!this.engine.sync) return this.log.error("Sync doesn't exist for this adapter");
     this.engine.sync(this.table, data, callback);
 };
 
@@ -168,7 +173,7 @@ fn.addQueryMethod = function(name, func, map) {
         var query = func.apply(this, arguments);
 
         if (query instanceof Error) {
-            return log.error(query);
+            return Q.reject(query);
         } else if (_.isPlainObject(query.q)) {
             query = query.toString();
         } else if (_.isArray(query._queue) && query.print) {

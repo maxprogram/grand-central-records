@@ -1,11 +1,10 @@
 var mysql = require('mysql'),
-    log = require('../lib/log').database,
     _ = require('lodash'),
     Q = require('q');
 
 var _options;
 
-var Mysql = module.exports = function Mysql(connect) {
+var Mysql = module.exports = function Mysql(connect, log) {
     _options = {
         host: connect.host,
         user: connect.username,
@@ -14,13 +13,14 @@ var Mysql = module.exports = function Mysql(connect) {
     };
     this.verbose = connect.verbose;
     this.q = "";
+    this.log = log;
 };
 
 var fn = Mysql.prototype;
 
 fn.query = function (sql, values) {
     var _this = this;
-    var _log = this.verbose ? log : function(){};
+    var _log = this.verbose ? this.log : function(){};
 
     var t1 = new Date().getTime();
 
@@ -53,8 +53,9 @@ fn.query = function (sql, values) {
         return rows;
     })
     .catch(function(err) {
-        err += ' (query: "' + sql + '")';
-        return Q.reject(new Error(err));
+        if (err instanceof Error)
+            err.message += ' (query: "' + sql + '")';
+        return Q.reject(err);
     });
 };
 

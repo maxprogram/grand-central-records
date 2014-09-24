@@ -1,6 +1,5 @@
 var sqlite3 = require('sqlite3');
 var Q = require('q');
-var log = require('../lib/log').database;
 var _ = require('lodash');
 var _str = require('underscore.string');
 
@@ -8,7 +7,7 @@ var _options = {};
 var endConnectionAfter = 4000;
 
 
-var Sqlite = module.exports = function Sqlite(connect) {
+var Sqlite = module.exports = function Sqlite(connect, log) {
     _options = {
         host: connect.host,
         user: connect.username,
@@ -21,6 +20,7 @@ var Sqlite = module.exports = function Sqlite(connect) {
     this.verbose = connect.verbose;
     this.q = "";
     this._inProgress = {};
+    this.log = log;
 };
 
 var fn = Sqlite.prototype;
@@ -48,7 +48,7 @@ fn.end = fn.close;
 
 fn.query = function (sql) {
     var _this = this;
-    var _log = this.verbose ? log : function(){};
+    var _log = this.verbose ? this.log : function(){};
 
     var t1 = new Date().getTime();
     this._inProgress[t1] = sql;
@@ -91,8 +91,9 @@ fn.query = function (sql) {
     })
     .catch(function(err) {
         delete _this._inProgress[t1];
-        err += ' (query: "' + sql + '")';
-        return Q.reject(new Error(err));
+        if (err instanceof Error)
+            err.message += ' (query: "' + sql + '")';
+        return Q.reject(err);
     });
 };
 
