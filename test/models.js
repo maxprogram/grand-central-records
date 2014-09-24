@@ -81,11 +81,9 @@ describe('with map', function() {
     });
 
     it('should map methods', function(done) {
-        Model._model.methods = {
-            ageDifference: function(n) {
-                return this.age - n;
-            }
-        };
+        Model.addMethod('ageDifference', function(n) {
+            return this.age - n;
+        });
         Model.all().then(function(models) {
             assert.equal(models[1].ageDifference(2), dummyData[1].age - 2);
         }).then(done, done);

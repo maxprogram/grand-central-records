@@ -71,6 +71,7 @@ var ORM = function(connection, table, options) {
 
     this.idField = options.idAttribute || "id";
     this.values = null;
+    model.setModelFunctions(fn);
 
     this._rebuild();
     connection = options = null;
@@ -78,18 +79,10 @@ var ORM = function(connection, table, options) {
 
 var fn = ORM.prototype;
 
-function bindModule(module, _this) {
-    return _.reduce(module, function(obj, f, name) {
-        obj[name] = f.bind(_this);
-        return obj;
-    }, {});
-}
-
-require('./lib/query')(fn);
-require('./lib/queue')(fn);
-require('./lib/promise')(fn);
-require('./lib/chain')(fn);
-model.setModelFunctions(fn);
+_.extend(fn, require('./lib/query'));
+_.extend(fn, require('./lib/queue'));
+_.extend(fn, require('./lib/promise'));
+_.extend(fn, require('./lib/chain'));
 
 ///////////////////////////////////////
 
