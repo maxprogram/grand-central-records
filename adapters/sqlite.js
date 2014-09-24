@@ -1,91 +1,113 @@
-var sqlite3 = require('sqlite3'),
-    async = require('async'),
-    log = require('../log').database,
-    _ = require('lodash'),
-    _str = require('underscore.string');
+var sqlite3 = require('sqlite3');
+var Q = require('q');
+var log = require('../lib/log').database;
+var _ = require('lodash');
+var _str = require('underscore.string');
 
-var _options;
+var _options = {};
+var endConnectionAfter = 4000;
 
-function Sqlite(connect){
+
+var Sqlite = module.exports = function Sqlite(connect) {
     _options = {
         host: connect.host,
         user: connect.username,
         password: connect.password,
         database: connect.database
     };
+
+    _.bindAll(this);
+
+    this.verbose = connect.verbose;
     this.q = "";
-}
+    this._inProgress = {};
+};
 
 var fn = Sqlite.prototype;
 
-module.exports = Sqlite;
+// Timer that ends DB connection after X seconds
+fn._resetTime = function() {
+    if (this._timer) clearTimeout(this._timer);
+    this._timer = setTimeout(function() {
+        if (this.client && !Object.keys(this._inProgress).length) {
+            this.client.end();
+            this.client = null;
+            this._inProgress = {};
+        }
+        if (Object.keys(this._inProgress).length) this._resetTime();
+    }.bind(this), endConnectionAfter);
+};
 
-fn.query = function (sql,values,cb) {
+// Ends the DB connection
+fn.close = function() {
+    if (this.client) this.client.close();
+    if (this._timer) clearTimeout(this._timer);
+    this.client = null;
+};
+fn.end = fn.close;
 
-    var logging = function(){};
-
-    if (sql.verbose){
-        sql = sql.sql;
-        logging = function(str, type, time){
-            return log(str, type, time);
-        };
-    }
+fn.query = function (sql) {
+    var _this = this;
+    var _log = this.verbose ? log : function(){};
 
     var t1 = new Date().getTime();
+    this._inProgress[t1] = sql;
 
-    var db = new sqlite3.Database(_options.database);
+    var client = this.client || new sqlite3.Database(_options.database);
+    var serialize = Q.denodeify(client.serialize.bind(client));
+    var query = Q.denodeify(client.all.bind(client));
 
-    db.serialize(runQueries);
-
-    function runQueries() {
-        // query([sql,sql], cb)
-        if (Array.isArray(sql) && typeof values === 'function') {
-            cb = values;
-            logging("Executing queries...");
-            async.each(sql, function(q, next) {
-                db.all(q, next);
-            }, getId);
+    return serialize().then(function() {
+        // query([sql,sql])
+        if (Array.isArray(sql)) {
+            return promiseSeries(sql.map(function(q) {
+                return (q.trim() !== "") ? q : null;
+            }), query);
         }
-
-        // query(sql, cb)
-        else if (typeof values === 'function') {
-            cb = values;
-            db.all(sql, getId);
-        }
-
-        // query(sql, [values], cb)
-        else {
-            values.forEach(function(v,i) {
-                sql = sql.replace(new RegExp("%"+i,"g"), v);
-            });
-            db.all(sql, getId);
-        }
-    }
-
+        return query(sql);
+    })
     // Get insert row ID
-    function getId(err, rows) {
-        if (!Array.isArray(sql) && !err && _.contains(sql.split(" "), "INSERT")) {
-            db.get("SELECT last_insert_rowid() AS id", function(err,row){
-                finish(err, row.id);
+    .then(function(rows) {
+        if (!Array.isArray(sql) && _.contains(sql.split(" "), "INSERT")) {
+            return query("SELECT last_insert_rowid() AS id").then(function(rows) {
+                return rows[0].id;
             });
-        } else finish(err, rows);
-    }
-
-    function finish(err, rows) {
-        db.close();
-
+        }
+        return rows;
+    })
+    // Close up
+    .then(function(rows) {
+        delete _this._inProgress[t1];
         var t2 = new Date().getTime();
         if (Array.isArray(sql)) {
-            sql.forEach(function(q,n) {
-                logging(q, "SQLite3 Query ("+n+")", t2-t1);
+            sql.forEach(function(q, n) {
+                _log(q, "SQLite3 Query ("+n+")", t2-t1);
             });
         } else {
-            logging(sql, "SQLite3 Query", t2-t1);
+            _log(sql, "SQLite3 Query", t2-t1);
         }
 
-        cb(err, rows);
-    }
+        return rows;
+    })
+    .catch(function(err) {
+        delete _this._inProgress[t1];
+        err += ' (query: "' + sql + '")';
+        return Q.reject(new Error(err));
+    });
 };
+
+// Runs promise in series over an array
+function promiseSeries(array, promise) {
+    var newArray = [];
+    return array.reduce(function(newPromise, value) {
+        return newPromise.then(function() {
+            return promise(value);
+        }).then(function(newValue) {
+            newArray.push(newValue);
+            return newArray;
+        });
+    }, Q());
+}
 
 fn.escape = function(d) {
     if (d === undefined || d === null) return "NULL";

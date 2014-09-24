@@ -1,11 +1,14 @@
-var pg = require('pg'),
-    log = require('../log').database,
-    _ = require('lodash'),
-    _str = require('underscore.string');
+var _ = require('lodash');
+var Q = require('q');
+var pg = require('pg');
+var log = require('../lib/log').database;
+var _str = require('underscore.string');
 
-var _options;
+var _options = {};
+var endConnectionAfter = 4000;
 
-function Postgres(connect){
+
+var Postgres = module.exports = function(connect) {
     _options = {
         host: connect.host || 'localhost',
         user: connect.username || 'postgres',
@@ -15,24 +18,14 @@ function Postgres(connect){
 
     _.bindAll(this);
 
+    this.verbose = connect.verbose;
     this.q = "";
     this._inProgress = {};
-}
+};
 
 var fn = Postgres.prototype;
 
-module.exports = Postgres;
-
-fn.init = function(cb) {
-    if (this.client) {
-        this._resetTime();
-        return cb();
-    }
-    this.client = new pg.Client(_options);
-    this.client.connect(cb);
-    this._resetTime();
-}
-
+// Timer that ends DB connection after X seconds
 fn._resetTime = function() {
     if (this._timer) clearTimeout(this._timer);
     this._timer = setTimeout(function() {
@@ -42,82 +35,65 @@ fn._resetTime = function() {
             this._inProgress = {};
         }
         if (Object.keys(this._inProgress).length) this._resetTime();
-    }.bind(this), 4000);
+    }.bind(this), endConnectionAfter);
 };
 
+// Ends the DB connection
 fn.end = function() {
     if (this.client) this.client.end();
     if (this._timer) clearTimeout(this._timer);
     this.client = null;
 };
 
-fn.query = function(sql, values, cb) {
-    var self = this, verbose = false;
-
-    if (typeof values === 'function') {
-        cb = values;
-        values = null;
+// Initialize PG connection
+fn.init = function() {
+    if (this.client) {
+        this._resetTime();
+        return Q(this.client.query);
     }
+    this.client = new pg.Client(_options);
+    this.client.connect = Q.denodeify(this.client.connect.bind(this.client));
+    this.client.query = Q.denodeify(this.client.query.bind(this.client));
 
-    var logging = function(){};
-    if (typeof sql === 'object'){
-        verbose = sql.verbose;
-        sql = sql.sql;
-        logging = function(str, type, time){
-            return log(str, type, time);
-        };
-    }
+    return this.client.connect().then(function() {
+        this._resetTime();
+    }.bind(this));
+};
+
+// Traditional SQL query
+fn.query = function(sql, values) {
+    var _this = this;
+    var _log = this.verbose ? log : function(){};
 
     var t1 = new Date().getTime();
     this._inProgress[t1] = sql;
 
-    var runQueries = function (err) {
-        if (err) return cb(err);
-
-        if (typeof sql === 'object' && sql.text) {
-        // query({options}, cb)
-            cb = values;
-            logging("Executing object...");
-            this.client.query(sql, finish);
-
-        } else if (typeof values === 'function' && typeof sql === 'string') {
-        // query(sql, cb)
-            cb = values;
-            this.client.query(sql, finish);
-
-        } else if (typeof sql === 'object') {
-        // query([sql, sql], cb)
-            cb = values;
-            logging("Executing queries...");
-            async.each(sql, function(q, next) {
-                if (q.trim() !== "") this.client.query(q, next);
-                else next();
-            });
+    return this.init()
+    // Run queries
+    .then(function() {
+        if (_.isArray(sql)) {
+            return Q.all(sql.map(function(q) {
+                return (q.trim() !== "") ? _this.client.query(q) : null;
+            }));
         }
-        // query(sql, values, cb)
-        else this.client.query(sql, values, finish);
+        return _this.client.query(sql, values);
+    })
+    // Clean up results
+    .then(function(results) {
+        delete _this._inProgress[t1];
 
-    }.bind(this);
-
-    this.init(runQueries);
-
-    function finish(err, results) {
-        delete self._inProgress[t1];
-        if (err) return cb(err + '(query: ' + sql + ')');
-
-        if (verbose) {
+        if (_this.verbose) {
             var t2 = new Date().getTime();
-            if (Array.isArray(sql)) {
-                sql.forEach(function(q,n) {
-                    logging(q, "PG Query ("+n+")", t2-t1);
-                });
-            } else logging(sql, "Postgres Query", t2-t1);
+            if (_.isArray(sql)) sql.forEach(function(q, n) {
+                _log(q, "PG Query ("+n+")", t2-t1);
+            });
+            else _log(sql, "Postgres Query", t2-t1);
         }
 
         // Checks if there are multiple results, normalizes
-        if (Array.isArray(results) && results.length==1) {
+        if (_.isArray(results) && results.length == 1) {
             results = results[0].rows;
-        } else if (Array.isArray(results)) {
+        } else if (_.isArray(results)) {
             results = results.map(function(res) {
                 return res.rows;
             });
@@ -127,12 +103,17 @@ fn.query = function(sql, values, cb) {
             results = results.rows;
         }
 
-        cb(err, results);
-    };
-
+        return results;
+    })
+    .catch(function(err) {
+        delete _this._inProgress[t1];
+        err += ' (query: "' + sql + '")';
+        return Q.reject(new Error(err));
+    });
 };
 
-fn.escape = function(d){
+// Escapes value for PG query
+fn.escape = function(d) {
     var _this = this;
 
     if (d === undefined || d === null) return "NULL";
@@ -272,17 +253,3 @@ fn._buildColumn = function(name, type, required, defaultValue) {
 
 // fn.addColumn
 // fn.dropColumn
-
-/*
-fn.getColumns = function(callback){
-    var pg = module.exports;
-    pg.query(["SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='%1'",this.table], function(err,res){
-        if (err) callback(err);
-        else {
-            var cols = [];
-            res.rows.forEach(function(col){ cols.push(col.column_name); });
-            callback(null,cols);
-        }
-    });
-};
-*/

@@ -43,9 +43,8 @@ describe('', function() {
 
     it('should fail without table', function(done) {
         var Item = new GCR({ adapter: "test" });
-        Item.all(function(err, res) {
-            assert.throws(err);
-            done();
+        Item.all().fin(done).fail(function(err) {
+            assert(err);
         });
     });
 });
@@ -56,53 +55,50 @@ var dummyData = [
 ];
 
 describe('with map', function() {
-    it('should map data to model', function() {
+    it('should map data to model', function(done) {
         Model = db.model(':test:', {
             data: dummyData,
             schema: schema
         });
-        Model.all(function(err, models) {
-            assert.ifError(err);
+        Model.all().then(function(models) {
             assert.equal(models[0].id, -1);
             assert.equal(models[0]._query, 'SELECT * FROM :test:');
-            assert.equal(models[1].age, 42);
-            assert.equal(models[0].type, 'Alien');
-            assert.equal(models[1].type, 'Person');
-        });
+            assert.equal(models[1].age, dummyData[1].age);
+            assert.equal(models[0].type, dummyData[0].type);
+            assert.equal(models[1].type, dummyData[1].type);
+        }).then(done, done);
     });
 
-    it('should map getters', function() {
+    it('should map getters', function(done) {
         Model._model.getters = {
             fullName: function() {
                 return this.first + ' ' + this.last;
             }
         };
-        Model.all(function(err, models) {
-            assert.ifError(err);
-            assert.equal(models[0].fullName, 'Clark Kent');
-        });
+        Model.all().then(function(models) {
+            assert.equal(models[0].fullName, dummyData[0].first + ' ' + dummyData[0].last);
+        }).then(done, done);
     });
 
-    it('should map methods', function() {
+    it('should map methods', function(done) {
         Model._model.methods = {
             ageDifference: function(n) {
                 return this.age - n;
             }
         };
-        Model.all(function(err, models) {
-            assert.ifError(err);
-            assert.equal(models[1].ageDifference(2), 40);
-        });
+        Model.all().then(function(models) {
+            assert.equal(models[1].ageDifference(2), dummyData[1].age - 2);
+        }).then(done, done);
     });
 
-    it('should reload data', function() {
-        Model.all(function(err, models) {
+    it('should reload data', function(done) {
+        Model.all().then(function(models) {
             var superman = models[0];
             superman.age = 40;
             assert.equal(superman.age, 40);
             superman.reload();
             assert.equal(superman.age, 37);
-        });
+        }).then(done, done);
     });
 
     it('should create new model', function() {

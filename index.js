@@ -3,28 +3,34 @@
 var _    = require('lodash'),
     _str = require('underscore.string'),
     path = require('path'),
-    log = require('./log'),
+    log = require('./lib/log'),
     model = require('./lib/model');
 
 
 ///////////////////////////////////////
 
 
-var ORM = function(connection, table, options){
+var ORM = function(connection, table, options) {
+    options = options || {};
     if (!connection || !connection.adapter)
         return log.error("No connection adapter provided");
     if (typeof table === "object") {
         options = table;
         table = null;
-    } else if (!options) options = {};
+    }
+
+    var verbose = options.hasOwnProperty("verbose") ? options.verbose : false;
+    if (_.isFunction(verbose)) log.logger = verbose;
+    connection.verbose = verbose;
 
     // Load database adapters
 
     var adapter = connection.adapter;
 
-    if (connection.engine){
+    if (connection.engine) {
         this.adapter = adapter;
         this.engine = connection.engine;
+        this.engine.verbose = verbose;
     } else {
         if (_.contains(['postgres','pg','postgresql'], adapter)) {
             this.adapter = "pg";
@@ -40,9 +46,10 @@ var ORM = function(connection, table, options){
         } else if (_.contains(['sqlite','sqlite3'], adapter)) {
             this.adapter = "sqlite";
             if (connection.database != ':memory:')
-                connection.database = path.join(connection.dir, connection.database);
+                connection.database = path.join(connection.dir || '', connection.database);
             var Sqlite = require('./adapters/sqlite');
             this.engine = new Sqlite(connection);
+            this.end = this.engine.close;
 
         } else if (adapter == 'test') {
             this.adapter = "test";
@@ -52,9 +59,6 @@ var ORM = function(connection, table, options){
             return log.error("Database adapter '"+adapter+"' not recognized");
         }
     }
-
-    var verbose = options.hasOwnProperty("verbose") ? options.verbose : false;
-    if (_.isFunction(verbose)) log.logger = verbose;
 
     this._options = options;
     this.verbose = verbose;
@@ -74,11 +78,17 @@ var ORM = function(connection, table, options){
 
 var fn = ORM.prototype;
 
+function bindModule(module, _this) {
+    return _.reduce(module, function(obj, f, name) {
+        obj[name] = f.bind(_this);
+        return obj;
+    }, {});
+}
+
 require('./lib/query')(fn);
 require('./lib/queue')(fn);
 require('./lib/promise')(fn);
 require('./lib/chain')(fn);
-
 model.setModelFunctions(fn);
 
 ///////////////////////////////////////
@@ -162,26 +172,21 @@ fn.toQuery = fn.toString;
 
 fn.addQueryMethod = function(name, func, map) {
     this[name] = function() {
-        var lastArg = arguments[arguments.length - 1];
-        var callback = _.isFunction(lastArg) ? lastArg : null;
-        if (callback) delete arguments[arguments.length - 1];
-
         var query = func.apply(this, arguments);
 
         if (query instanceof Error) {
-            if (callback) return callback(query);
-            else return log.error(query);
+            return log.error(query);
         } else if (_.isPlainObject(query.q)) {
             query = query.toString();
         } else if (_.isArray(query._queue) && query.print) {
             query = query.print(' ');
         }
 
-        var queue = this.queue().add(query).map(map);
-
-        if (callback) return queue.run(callback);
-        else return queue;
-    }
+        return this.query(query).then(function(res) {
+            if (!res) return null;
+            return res.map(map);
+        });
+    };
 };
 
 module.exports = ORM;
