@@ -169,6 +169,10 @@ fn.toQuery = fn.toString;
 ///////////////////////////////////////
 
 fn.addQueryMethod = function(name, func, map) {
+    var currentKeys = _.keys(this);
+    if (_.contains(currentKeys, name))
+        return this.log.error('Query method "'+name+'" reserved');
+
     this[name] = function() {
         var query = func.apply(this, arguments);
 
