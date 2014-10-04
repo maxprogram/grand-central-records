@@ -11,13 +11,66 @@ A Node ORM/ActiveRecord library with promises. Work in progress.
 * Chainable query methods
 * Execute raw queries alone or in a queue
 
-### Inspiration
+---------------------------------------
+## Getting started
 
-* [JugglingDB](https://github.com/1602/jugglingdb)
-* [Node-ORM](https://github.com/dresende/node-orm2)
-* [Model](https://npmjs.org/package/model)
-* [Persist](https://npmjs.org/package/persist)
-* [Mongoose](https://npmjs.org/package/mongoose)
+<a name="gcr" />
+### new GCR(connection, [table], [options])
+
+```js
+var GCR = require('grand-central-records');
+
+var Model = new GCR({
+    adapter: "mysql",
+    host: "localhost",
+    database: "test",
+    username: "admin",
+    password: "admin"
+}, "users");
+
+Model.find(8).then(function(users) {
+    console.log(users[0].name);
+}).catch(console.error);
+
+Model.select(["name","address"]).where({admin: true})
+.then(function(result) {
+    result.forEach(function(user) { ... });
+});
+```
+
+Creating a new instance of the GCR object creates a connection to a new database.
+
+* __connection__ `object` — Database connection parameters.
+    * *adapter* — mysql/MySQL, postgresql/postgres/pg, sqlite3/sqlite
+    * *host*, *database*, *username*, *password* — connection parameters
+* __table__ `string` — An optional table name if only a single table is being queried.
+* __options__ `object` — Options to pass to the model.
+    * *verbose* `boolean` `function` —  Turning verbose on will log all queries to the console. `false` by default. If a function is provided, it will be used to log all outputs.
+    * *idAttribute* `string` — The name of the unique ID attribute field (defaults to `'id'`).
+    * (see [Models](#models))
+
+<a name="model" />
+### model(table, [options])
+
+* __table__ `string` — The name of the table the model is associated with.
+* __options__ `json` — See above.
+
+Multiple models can also be created from the same database.
+
+```js
+var GCR = require('grand-central-records');
+
+var db = new GCR({
+    adapter: "mysql",
+    host: "localhost",
+    database: "test",
+    username: "admin",
+    password: "admin"
+}, { verbose: true });
+
+var User = db.model("users"),
+    Project = db.model("projects");
+```
 
 ---------------------------------------
 # Documentation
@@ -69,65 +122,15 @@ A Node ORM/ActiveRecord library with promises. Work in progress.
 * [Data type: hstore](#hstore)
 
 ---------------------------------------
-## Getting started
+### Inspiration
 
-<a name="gcr" />
-### new GCR(connection, [table], [options])
+* [JugglingDB](https://github.com/1602/jugglingdb)
+* [Node-ORM](https://github.com/dresende/node-orm2)
+* [Model](https://npmjs.org/package/model)
+* [Persist](https://npmjs.org/package/persist)
+* [Mongoose](https://npmjs.org/package/mongoose)
 
-* __connection__ `json` — Database connection parameters.
-    * *adapter* — mysql/MySQL, postgresql/postgres/pg, sqlite3/sqlite
-    * *host*, *database*, *username*, *password* — connection parameters
-* __table__ `string` — An optional table name if only a single table is being queried.
-* __options__ `json` — Options to pass to the model.
-    * *verbose* `boolean` `function` —  Turning verbose on will log all queries on the console. `false` by default. If a function is provided, it will be used to log all outputs.
-    * *idAttribute* `string` — The name of the unique ID attribute field (defaults to 'id');
-    * *map* `boolean` — Set to `true` to map query results to a model. Otherwise, results will be in their raw format.
-    * (see [Models](#models))
 
-Creating a new instance of the GCR object creates a connection to a new database.
-
-```js
-var GCR = require('grand-central-records');
-
-var Model = new GCR({
-    adapter: "mysql",
-    host: "localhost",
-    database: "test",
-    username: "admin",
-    password: "admin"
-}, "users");
-
-Model.find(8).then(function(users) {
-    console.log(users[0].name);
-}).catch(console.error);
-
-Model.select(["name","address"]).where({admin: true})
-.then(function(result) {
-    result.forEach(function(user) { ... });
-});
-```
-<a name="model" />
-### model(table, [options])
-
-* __table__ `string` — The name of the table the model is associated with.
-* __options__ `json` — See above.
-
-Multiple models can also be created from the same database.
-
-```js
-var GCR = require('grand-central-records');
-
-var db = new GCR({
-    adapter: "mysql",
-    host: "localhost",
-    database: "test",
-    username: "admin",
-    password: "admin"
-}, { verbose: true });
-
-var User = db.model("users"),
-    Project = db.model("projects");
-```
 
 ---------------------------------------
 ## Raw Queries

@@ -1,7 +1,7 @@
 {
     "name": "grand-central-records",
     "description": "An activerecord-inspired ORM for Node.js",
-    "version": "0.1.5",
+    "version": "0.2.0",
     "keywords": ["grand central", "rails", "orm", "activerecord"],
     "author": {
         "name": "Max Olson",
@@ -11,25 +11,20 @@
         "type": "git",
         "url": "https://github.com/maxprogram/grand-central-records.git"
     },
-
     "main": "index",
-
     "scripts": {
-        "test": "mocha -R spec ./test/gcr.js ./test/*"
+        "test": "mocha -R list --bail ./test/gcr.js ./test/*"
     },
-
     "devDependencies": {
-        "mocha": "*",
-        "pg": "~2.0.0",
+        "mocha": "~1.21.4",
+        "pg": "3.5.0",
         "mysql": "2.0.0-alpha8",
-        "sqlite3": "2.1.7"
+        "sqlite3": "3.0.2"
     },
-
     "dependencies": {
         "lodash": "~2.4.1",
-        "async": "~0.9.0",
         "colors": "~0.6.2",
-        "underscore.string": "*",
+        "underscore.string": "~2.3.3",
         "q": "~1.0.1"
     }
 }
