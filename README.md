@@ -1,13 +1,6 @@
-# Grand Central Records
+# Grand Central Records (GCR)
 
-A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks. Work in progress.
-
-### TODO
-
-* Implement Promises in SQL adapters
-* Query joins (see https://www.npmjs.org/package/sql)
-* MySQL Pool Connections
-* Migration / synchronization
+A Node ORM/ActiveRecord library with promises. Work in progress.
 
 ### Custom ORM
 
@@ -15,84 +8,14 @@ A basic ORM/ActiveRecord library for use in smaller Node projects or frameworks.
     * MySQL
     * Postgres
     * SQLite3
-* Chainable queries
-* Raw queries
-    * .query() -- executes the given query
-    * .queue(query string or chain) (accepts array, string, object)
-    * .run() -- executes all queries in the queue
-* Callbacks *or* promises
-
-### Inspiration
-
-* [JugglingDB](https://github.com/1602/jugglingdb)
-* [Node-ORM](https://github.com/dresende/node-orm2)
-* [Model](https://npmjs.org/package/model)
-* [Persist](https://npmjs.org/package/persist)
-* [Mongoose](https://npmjs.org/package/mongoose)
-
----------------------------------------
-# Documentation
-
-### Getting started
-
-* [GCR()](#gcr)
-* [model()](#model)
-* [Promises](#promises)
-
-### Raw queries
-
-* [query()](#query)
-* [queue()](#queue)
-
-### Models
-
-* [Models](#models)
-* [Expansion of models](#expansion)
-* [reload()](#reload)
-
-### Other functions
-
-* [setTable](#setTable)
-* [addGetter](#addGetter)
-* [addMethod](#addMethod)
-
-### Query methods
-
-* [all()](#all)
-* [find()](#find)
-* [where()](#where)
-* [select()](#select)
-* [order()](#order)
-* [limit()](#limit)
-* [offset()](#offset)
-* [insert()](#insert)
-* [update()](#update)
-* [remove()](#remove)
-
-### Postgres
-
-* [end()](#end)
-* [Query: returning()](#returning)
-* [Data type: Array](#array)
-* [Data type: hstore](#hstore)
+* Chainable query methods
+* Execute raw queries alone or in a queue
 
 ---------------------------------------
 ## Getting started
 
 <a name="gcr" />
 ### new GCR(connection, [table], [options])
-
-* __connection__ `json` — Database connection parameters.
-	* *adapter* — mysql/MySQL, postgresql/postgres/pg, sqlite3/sqlite
-	* *host*, *database*, *username*, *password* — connection parameters
-* __table__ `string` — An optional table name if only a single table is being queried.
-* __options__ `json` — Options to pass to the model.
-	* *verbose* `boolean` `function` —  Turning verbose on will log all queries on the console. `false` by default. If a function is provided, it will be used to log all outputs.
-	* *idAttribute* `string` — The name of the unique ID attribute field (defaults to 'id');
-    * *map* `boolean` — Set to `true` to map query results to a model. Otherwise, results will be in their raw format.
-	* (see [Models](#models))
-
-Creating a new instance of the GCR object creates a connection to a new database.
 
 ```js
 var GCR = require('grand-central-records');
@@ -105,18 +28,27 @@ var Model = new GCR({
     password: "admin"
 }, "users");
 
-Model.find(8, function(err, user){
-    if (err) throw err;
-    console.log(user.name);
-});
+Model.find(8).then(function(users) {
+    console.log(users[0].name);
+}).catch(console.error);
 
-Model.select(["name","address"]).where({admin: true}, function(err, result) {
-    if (err) throw err;
-    result.forEach(function(user) {
-        ...
-    });
+Model.select(["name","address"]).where({admin: true})
+.then(function(result) {
+    result.forEach(function(user) { ... });
 });
 ```
+
+Creating a new instance of the GCR object creates a connection to a new database.
+
+* __connection__ `object` — Database connection parameters.
+    * *adapter* — mysql/MySQL, postgresql/postgres/pg, sqlite3/sqlite
+    * *host*, *database*, *username*, *password* — connection parameters
+* __table__ `string` — An optional table name if only a single table is being queried.
+* __options__ `object` — Options to pass to the model.
+    * *verbose* `boolean` `function` —  Turning verbose on will log all queries to the console. `false` by default. If a function is provided, it will be used to log all outputs.
+    * *idAttribute* `string` — The name of the unique ID attribute field (defaults to `'id'`).
+    * (see [Models](#models))
+
 <a name="model" />
 ### model(table, [options])
 
@@ -140,35 +72,65 @@ var User = db.model("users"),
     Project = db.model("projects");
 ```
 
-### Promises
+---------------------------------------
+# Documentation
 
-Execute a query using a callback:
-```js
-Model.find(52, function(err, res) {...});
-Model.find(52).select('id').run(function(err, res) {...});
-```
+### Getting started
 
-Or by using promises:
-```js
-Model.find(52)
-  .then(function(res) {
-    return res;
-  })
-  .then(function(res) {
-    // do something...
-  })
-  .fail(function(err) {
-    throw err;
-  });
+* [GCR()](#gcr)
+* [model()](#model)
+* [Promises](#promises)
 
-// Or in parallel using #parallel() as an alieas for Q's 'all'
-db.parallel([
-    Model.find(52).run(),
-    Model.where({ type: 2 }).run()
-]).done(function(res) {
-    // do something...
-}).fail(function(err) {...});
-```
+### Raw queries
+
+* [query()](#query)
+* [queue()](#queue)
+
+### Models
+
+* [Models](#models)
+* [Validations](#validations)
+* [Creating & Updating Models](#newmodels)
+* [Expansion of models](#expansion)
+* [reload()](#reload)
+
+### Other functions
+
+* [parallel](#parallel)
+* [setTable](#setTable)
+* [addGetter](#addGetter)
+* [addMethod](#addMethod)
+
+### Query methods
+
+* [all()](#all)
+* [find()](#find)
+* [where()](#where)
+* [select()](#select)
+* [order()](#order)
+* [limit()](#limit)
+* [offset()](#offset)
+* [insert()](#insert)
+* [update()](#update)
+* [remove()](#remove)
+
+#### Postgres
+
+* [end()](#end)
+* [Query: returning()](#returning)
+* [Data type: Array](#array)
+* [Data type: hstore](#hstore)
+
+---------------------------------------
+### Inspiration
+
+* [JugglingDB](https://github.com/1602/jugglingdb)
+* [Node-ORM](https://github.com/dresende/node-orm2)
+* [Model](https://npmjs.org/package/model)
+* [Persist](https://npmjs.org/package/persist)
+* [Mongoose](https://npmjs.org/package/mongoose)
+
+
 
 ---------------------------------------
 ## Raw Queries
@@ -179,18 +141,20 @@ db.parallel([
 Execute raw query to database.
 
 ```js
-db.query('SELECT 1 AS a', function(err, res) {
+db.query('SELECT 1 AS a').then(function(res) {
     console.log(res[0].a); //= 1
 });
 
 // Substitute with array of values
-db.query('SELECT 1 AS a; SELECT %1 AS a;', ['hello'], function(err, res) {
+db.query('SELECT 1 AS a; SELECT %1 AS a;', ['hello'])
+.then(function(res) {
     console.log(res[0].a); //= 1
     console.log(res[1].a); //= hello
 });
 
 // Substitute with key/values
-db.query('SELECT :name AS a', { name: 'hello' }, function(err, res) {
+db.query('SELECT :name AS a', { name: 'hello' })
+.then(function(res) {
     console.log(res[0].a); //= hello
 })
 ```
@@ -200,23 +164,24 @@ db.query('SELECT :name AS a', { name: 'hello' }, function(err, res) {
 Add query to queue for later execution. Query can be a raw query string, a chained method object, or an array of either. Values can't be passed to objects or arrays (only raw strings);
 
 #### queue.add(query, [values])
-#### queue.print() || queue.get()
-#### queue.run(callback)
+#### queue.toString() || queue.print() || queue.get()
+#### queue.run()
 
 ```js
 var queue = db.queue();
 
 queue.add('SELECT 1 AS a')
-  .add('SELECT %1', [2])
-  .add('SELECT :name AS a', { name: 'hello' })
-  .run(function(err, res) {
+.add('SELECT %1 AS a', [2])
+.add('SELECT :number AS a', { number: 3 })
+.run().then(function(res) {
     console.log(res[0].a); //= 1
-    console.log(res[2].a); //= hello
+    console.log(res[1].a); //= 2
+    console.log(res[2].a); //= 3
 });
 
 queue.add(Model.find(1))
-  .add(Model.select('name').limit(1))
-  .run(function(err, res) {
+.add(Model.select('name').limit(1))
+.run().then(function(res) {
     console.log(res[0]); // (row with ID of 1)
     console.log(res[1]); // (first row with only name column)
 });
@@ -224,13 +189,11 @@ queue.add(Model.find(1))
 queue.add(['SELECT 1 AS a', 'SELECT 2 AS a']);
 . . .
 console.log(queue.print()); //= "SELECT 1 AS a; SELECT 2 AS a;"
-queue.run(function(err, res) {
+queue.run().then(function(res) {
     console.log(res[0].a); //= 1
     console.log(res[1].a); //= 2
-});
-// OR as promise //
-queue.run().then(function(res) {...})
-  .fail(function(err) {...});
+}).catch(console.error);
+
 // Add custom mapping function for results
 queue.add(...).map(function(row) {
     return row.id;
@@ -248,6 +211,10 @@ var User = db.model('users', {
         first: String,
         last:  String,
         admin: { type: Boolean, default: false },
+        group: function(val) {
+            if (val % 2 !== 0) return 'must be even';
+            return true;
+        },
         created_at: Date,
         updated_at: Date
     }
@@ -265,6 +232,7 @@ var User = db.model('users', {
     + `Buffer`
     + `[value1, value2, value3, ...]` list of options
     + `[String]` array of values (Postgres only)
+    + `function(value){}` custom validation (returns `true` if valid, `false` or a message string if invalid)
 * `default`: default value if empty
 * `allowNull`: `false` requires a value (default is `true`)
 * `length`: the maximum length of a string
@@ -281,6 +249,35 @@ __Custom Messages (%n replaced with required value):__
 * `isNull`: message if value is empty
 * `notInList`: message if value isn't in list of options
 * `inList`: message if value is in list of incompatible values
+
+<a name="newmodels" />
+### Creating & updating models
+
+Creating a new model:
+```js
+var tiger = Animal.new({ name: 'Tiger', type: 'cat' });
+
+// Run validations and insert into DB:
+tiger.save().then(function(err) { ... });
+```
+
+Updating a model:
+```js
+Animal.where({ name: 'Tiger' })
+.then(function(animals) {
+    animals[0].name = 'Siberian Tiger';
+    // Run validations and update in DB:
+    return animals[0].save();
+}).fail(function(err) { ... });
+
+// Updating bulk data
+Animal.where({ name: 'Tiger' })
+.then(function(animals) {
+    var tiger = animals[0];
+    tiger.update({ name: 'Bengal', type: 'tiger' });
+    return tiger.save();
+});
+```
 
 <a name="expansion" />
 ### Expansion of models
@@ -326,16 +323,30 @@ console.log(user.fullName); //= PETER Parker
 Reloads the model's original data.
 
 ```js
-User.find(1, function(err, user) {
-    user.name = 'Mark';
-    console.log(user.name); //= Mark
-    user.reload();
-    console.log(user.name); //= Adam (the original)
+User.find(1).then(function(users) {
+    var mark = users[0];
+    mark.name = 'Markus';
+    console.log(mark.name); //= Markus
+    mark.reload();
+    console.log(mark.name); //= Mark (the original)
 });
 ```
 
 ---------------------------------------
 ## Other functions:
+
+<a name="parallel"/>
+### parallel(queries)
+
+An alias for Q's 'all': executes an array of query chains in parallel.
+```js
+db.parallel([
+    Model.find(52),
+    Model.where({ type: 2 })
+]).done(function(res) {
+    // do something...
+}).fail(function(err) {...});
+```
 
 <a name="setTable"/>
 ### setTable(table)
@@ -369,7 +380,7 @@ Gets all table rows (`SELECT * FROM table`).
 * __callback(err, rows)__ — Optional callback to run the query.
 
 ```js
-Animal.find(88, function(err, animals) {
+Animal.find(88).then(function(animals) {
     console.log(animals[0]); //= [{ id: 88, name: 'Tiger' }]
 });
 Animal.find([6, 18]);
@@ -489,7 +500,7 @@ Person.where({ name: 'Mark' }).remove();
 <a name="end" />
 ### db.end()
 
-Ends the Postgres pool connection. Connection will end automatically after 10 seconds if no queries are running. (Otherwise a new connection begins when a query is run.)
+Ends the Postgres pool connection. Connection will end automatically after 4 seconds if no queries are running. (Otherwise a new connection begins when a query is run.)
 
 <a name="returning" />
 ### Query: returning(fields, [callback])

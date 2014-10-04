@@ -1,65 +1,61 @@
 var mysql = require('mysql'),
-    log = require('../log').database,
-    _ = require('lodash');
+    _ = require('lodash'),
+    Q = require('q');
 
 var _options;
 
-function Mysql(connect){
+var Mysql = module.exports = function Mysql(connect, log) {
     _options = {
         host: connect.host,
         user: connect.username,
         password: connect.password,
         database: connect.database
     };
+    this.verbose = connect.verbose;
     this.q = "";
-}
+    this.log = log;
+};
 
 var fn = Mysql.prototype;
 
-module.exports = Mysql;
-
-fn.query = function (sql,values,cb) {
-
-    var logging = function(){};
-    if (sql.verbose){
-        sql = sql.sql;
-        logging = function(str, type, time){
-            return log(str, type, time);
-        };
-    }
+fn.query = function (sql, values) {
+    var _this = this;
+    var _log = this.verbose ? this.log : function(){};
 
     var t1 = new Date().getTime();
 
     var connect = mysql.createConnection(_options);
+    var query = Q.denodeify(connect.query.bind(connect));
     var options = {};
 
     if (typeof sql === 'object') {
-        // query(options, cb)
+        // query(options)
         options = sql;
-        cb      = values;
         values  = options.values;
-
         delete options.values;
     } else if (typeof values === 'function') {
-        // query(sql, cb)
-        cb          = values;
+        // query(sql)
         options.sql = sql;
-        values      = undefined;
     } else {
-        // query(sql, values, cb)
-        options.sql    = sql;
+        // query(sql, values)
+        options.sql = sql;
         options.values = values;
     }
 
     options.sql = connect.format(options.sql, values || []);
 
-    // Runs the query, then the callback, then closes & logs the connection
-    connect.query(options, function(err, rows, fields){
+    return query(options).then(function(rows) {
         if (_.contains(options.sql.split(" "), "INSERT")) rows = rows.insertId;
         connect.end();
         var t2 = new Date().getTime();
-        logging(options.sql, 'MySQL Query', t2 - t1);
-        cb(err, rows, fields);
+        _log(options.sql, 'MySQL Query', t2 - t1);
+
+        return rows;
+    })
+    .catch(function(err) {
+        if (err instanceof Error)
+            err.message += ' (query: "' + sql + '")';
+        return Q.reject(err);
     });
 };
 

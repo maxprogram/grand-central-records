@@ -1,16 +1,18 @@
 var assert = require('assert');
 var GCR = require('..');
 
-var Model, db;
+var create = require('./helpers/createPG');
 
-before(function() {
-    db = new GCR({
-        adapter: "postgres"
-    }, { verbose: true });
-    Model = db.model('model');
-});
+var db = new GCR({
+    adapter: "postgres",
+    database: "gcr_test"
+}, { verbose: true });
+var Model = db.model('model');
 
-describe('query', function() {
+describe('queue', function() {
+
+before(create.before);
+after(create.after);
 
     it('should execute queue queries', function() {
         var queue = db.queue()
@@ -38,6 +40,20 @@ describe('query', function() {
           .add(Model.select('age').where({ name: 'sam' }))
           .print(' ');
         assert.equal(queue, "SELECT * FROM model WHERE name = 'jack'; SELECT model.age FROM model WHERE name = 'sam';");
+    });
+
+    it('should execute queue', function(done) {
+      var q = db.queue().add('SELECT 1 AS a')
+        .add('SELECT %1 AS a', [2])
+        .add('SELECT :number AS a', { number: 3 })
+        .add('INSERT INTO test (name) VALUES (\'queue\')')
+        .add('SELECT * FROM test WHERE id = 1')
+        .run().then(function(res) {
+            assert.equal(res[0].a, 1); //= 1
+            assert.equal(res[1].a, 2); //= 2
+            assert.equal(res[2].a, 3); //= 3
+            assert.equal(res[3].name, 'queue');
+        }).then(done, done);
     });
 
 });
