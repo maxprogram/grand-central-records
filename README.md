@@ -41,7 +41,7 @@ Creating a new instance of the GCR object creates a connection to a new database
 * __options__ `object` — Options to pass to the model.
     * *verbose* `boolean` `function` —  Turning verbose on will log all queries to the console. `false` by default. If a function is provided, it will be used to log all outputs.
     * *idAttribute* `string` — The name of the unique ID attribute field (defaults to `'id'`).
-    * (see [Models](#models))
+    * (see [Models](./docs/Models.md#models))
 
 <a name="model" />
 ### model(table, [options])
@@ -73,7 +73,6 @@ var User = db.model("users"),
 
 * [GCR()](#gcr)
 * [model()](#model)
-* [Promises](#promises)
 
 ### Raw queries
 

@@ -179,6 +179,11 @@ fn.addQueryMethod = function(name, func, map) {
         if (query instanceof Error) {
             return Q.reject(query);
         } else if (_.isPlainObject(query.q)) {
+            var db = query;
+            var _model = db._model;
+            map = map || function(d) {
+                return new model.Model(d, _model, db);
+            };
             query = query.toString();
         } else if (_.isArray(query._queue) && query.print) {
             query = query.print(' ');
@@ -186,7 +191,8 @@ fn.addQueryMethod = function(name, func, map) {
 
         return this.query(query).then(function(res) {
             if (!res) return null;
-            return res.map(map);
+            if (_.isFunction(map) && _.isArray(res)) return res.map(map);
+            return res;
         });
     };
 };
