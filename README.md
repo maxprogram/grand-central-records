@@ -1,15 +1,9 @@
 # Grand Central Records (GCR)
 
-A Node ORM/ActiveRecord library with promises. Work in progress.
+[![Build Status](https://travis-ci.org/maxprogram/grand-central-records.png?branch=master)](https://travis-ci.org/maxprogram/grand-central-records)
+[![NPM version](https://badge.fury.io/js/grand-central-records.svg)](http://badge.fury.io/js/grand-central-records)
 
-### Custom ORM
-
-* Connects with
-    * MySQL
-    * Postgres
-    * SQLite3
-* Chainable query methods
-* Execute raw queries alone or in a queue
+A promise-based Node ORM/ActiveRecord library that can connect to MySQL, Postgres, and SQLite3. Allows chainable, raw or queueable queries.
 
 ---------------------------------------
 ## Getting started

@@ -1,7 +1,7 @@
 {
     "name": "grand-central-records",
     "description": "An activerecord-inspired ORM for Node.js",
-    "version": "0.2.0",
+    "version": "0.5.0",
     "keywords": ["grand central", "rails", "orm", "activerecord"],
     "author": {
         "name": "Max Olson",
@@ -22,9 +22,9 @@
         "sqlite3": "3.0.2"
     },
     "dependencies": {
+        "q": "~1.0.1",
         "lodash": "~2.4.1",
         "colors": "~0.6.2",
-        "underscore.string": "~2.3.3",
-        "q": "~1.0.1"
+        "underscore.string": "~2.3.3"
     }
 }
