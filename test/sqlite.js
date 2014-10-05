@@ -2,7 +2,7 @@ var assert = require('assert');
 var GCR = require('..');
 
 
-describe('postgres', function() {
+describe('sqlite3', function() {
 
 var db, Model, q;
 

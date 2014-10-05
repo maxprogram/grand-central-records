@@ -30,9 +30,18 @@ db.query('SELECT :name AS a', { name: 'hello' })
 Add query to queue for later execution. Query can be a raw query string, a chained method object, or an array of either. Values can't be passed to objects or arrays (only raw strings);
 
 #### queue.add(query, [values])
-#### queue.toString() || queue.print() || queue.get()
+* **query** `string` `chain object` `queue object` 
+* **[values]** `array` `object` — Optional values to substitute into query
+
+#### queue.toString([separator]) || queue.print() || queue.get()
+* **[separator]** `string` — Optional string to separate queries.
+
 #### queue.run()
 
+#### queue.map(iterator)
+* **iterator** `function` — Iterator function to map query results.
+
+Examples:
 ```js
 var queue = db.queue();
 
