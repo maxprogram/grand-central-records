@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var assert = require('assert');
 var GCR = require('..');
 
@@ -96,19 +97,9 @@ describe('#save()', function() {
     });
 });
 
-describe('db#parallel()', function() {
-    it('should run queries in parallel', function(done) {
-        pg.parallel([
-            Model.find(1).run(),
-            Model.find(2).run()
-        ]).then(function(res) {
-            assert(res[0][0].hasOwnProperty('name'));
-            assert(res[1][0].hasOwnProperty('age'));
-        }).then(done, done);
-    });
-});
-
 // hstore
 // Arrays
 
 });
+
+

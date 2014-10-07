@@ -89,11 +89,15 @@ var User = db.model("users"),
 
 ### Other functions
 
-* [parallel](./docs/Other.md#parallel)
 * [setTable](./docs/Other.md#setTable)
 * [addGetter](./docs/Other.md#addGetter)
 * [addMethod](./docs/Other.md#addMethod)
 * [addQueryMethod](./docs/Other.md#addQueryMethod)
+* [Promise aliases](./docs/Other.md#promises)
+    - [parallel](./docs/Other.md#parallel)
+    - [thenOne](./docs/Other.md#thenOne)
+    - [thenEach](./docs/Other.md#thenEach)
+    - [thenMap](./docs/Other.md#thenMap)
 
 ### Query methods
 
