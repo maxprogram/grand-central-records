@@ -21,7 +21,7 @@ describe('#all()', function() {
 describe('#find()', function() {
     it('should query single id', function() {
         q = Model.find(1);
-        assert.equal("SELECT * FROM :test: WHERE id IN (1)", q+'');
+        assert.equal("SELECT * FROM :test: WHERE id = 1", q+'');
     });
 
     it('should query array of ids', function() {
@@ -110,7 +110,7 @@ describe('#insert()', function() {
 describe('#update()', function() {
     it('should output update', function() {
         q = Model.update(5, { category: 88 });
-        assert.equal(q+'', "UPDATE :test: SET (category) = (88) WHERE id IN (5)");
+        assert.equal(q+'', "UPDATE :test: SET (category) = (88) WHERE id = 5");
     });
 
     it('should output update with where()', function() {
@@ -122,7 +122,7 @@ describe('#update()', function() {
 describe('#remove()', function() {
     it('should output remove', function() {
         q = Model.remove(1);
-        assert.equal(q+'', "DELETE FROM :test: WHERE id IN (1)");
+        assert.equal(q+'', "DELETE FROM :test: WHERE id = 1");
     });
 
     it('should output remove with where()', function() {
