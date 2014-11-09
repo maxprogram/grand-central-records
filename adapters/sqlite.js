@@ -92,7 +92,7 @@ fn.query = function (sql) {
     .catch(function(err) {
         delete _this._inProgress[t1];
         if (err instanceof Error)
-            err.message += ' (query: "' + sql + '")';
+            err.query = sql;
         return Q.reject(err);
     });
 };

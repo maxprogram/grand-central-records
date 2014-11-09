@@ -54,7 +54,7 @@ fn.query = function (sql, values) {
     })
     .catch(function(err) {
         if (err instanceof Error)
-            err.message += ' (query: "' + sql + '")';
+            err.query = sql;
         return Q.reject(err);
     });
 };

@@ -107,8 +107,9 @@ fn.query = function(sql, values) {
     })
     .catch(function(err) {
         delete _this._inProgress[t1];
-        if (err instanceof Error)
-            err.message += ' (query: "' + sql + '")';
+        if (err instanceof Error && _this.verbose) {
+            err.query = sql;
+        }
         return Q.reject(err);
     });
 };
