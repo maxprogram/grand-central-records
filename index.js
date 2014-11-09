@@ -139,7 +139,8 @@ fn._rebuild = function() {
             limit: "",
             offset: "",
             returning: ""
-        }
+        },
+        unions: []
     };
 };
 
@@ -159,6 +160,10 @@ fn.toString = function() {
         this.q.where,
         other
     ].join(' ')).replace(/%t%/g, this.table);
+
+    if (this.q.unions.length) {
+        query += ' ' + this.q.unions.join(' ');
+    }
 
     this._rebuild();
 
