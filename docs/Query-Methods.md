@@ -41,13 +41,14 @@ Person.where({ id: Client.select('person_id').order('sales').limit(1) });
 <a name="select"/>
 ### select(fields, [callback])
 
-* __fields__ `string` `string[]` — An array or comma-separated string of the columns you want returned.
+* __fields__ `string` `string[]` `object` — An array of field names, comma-separated string of field names, or object in the form of `{ alias: 'field_name' }`.
 * __callback(err, rows)__ — Optional callback to run the query.
 
 ```js
 Book.select("author");
 Book.select("author, publisher");
 Book.select(["author", "publisher", "title"]);
+Book.select({ pub: "publisher" });
 ```
 
 <a name="order"/>
