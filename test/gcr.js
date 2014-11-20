@@ -20,13 +20,13 @@ describe('init', function() {
 
     it('should accept options in 2nd or 3rd param', function() {
         var Test = new GCR({ adapter: "test" }, { verbose: true });
-        assert.equal(Test.verbose, true);
+        assert.equal(Test.engine.verbose, true);
 
         Test = new GCR({ adapter: "test" }, "", { verbose: true });
-        assert.equal(Test.verbose, true);
+        assert.equal(Test.engine.verbose, true);
 
         Test = new GCR({ adapter: "test" });
-        assert.equal(Test.verbose, false);
+        assert.equal(Test.engine.verbose, false);
         assert.equal(Test.table, null);
     });
 

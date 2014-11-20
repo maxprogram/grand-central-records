@@ -53,7 +53,7 @@ fn.query = function (sql, values) {
         return rows;
     })
     .catch(function(err) {
-        if (err instanceof Error)
+        if (err instanceof Error && _this.verbose)
             err.query = sql;
         return Q.reject(err);
     });

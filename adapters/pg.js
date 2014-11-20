@@ -3,9 +3,11 @@ var Q = require('q');
 var pg = require('pg');
 var _str = require('underscore.string');
 
+// Store connection options locally
 var _options = {};
-var endConnectionAfter = 4000;
 
+// Time in ms to end DB connection
+var endConnectionAfter = 4000;
 
 var Postgres = module.exports = function(connect, log) {
     _options = {
