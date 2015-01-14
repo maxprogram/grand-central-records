@@ -1,5 +1,7 @@
 # Grand Central Records (GCR)
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/maxprogram/grand-central-records?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/maxprogram/grand-central-records.png?branch=master)](https://travis-ci.org/maxprogram/grand-central-records)
 [![NPM version](https://badge.fury.io/js/grand-central-records.svg)](http://badge.fury.io/js/grand-central-records)
 
